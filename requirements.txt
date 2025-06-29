@@ -1,0 +1,12 @@
+numpy
+scipy
+opencv-python
+onnxruntime
+tensorflow-cpu
+PySide6
+matplotlib
+rich
+python-osc
+pykalman
+numba
+wmi
