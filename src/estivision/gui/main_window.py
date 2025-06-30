@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QVBoxLayout,
-    QHBoxLayout, QGroupBox, QComboBox
+    QHBoxLayout, QGroupBox, QComboBox, QScrollArea
 )
 from PySide6.QtCore import Qt
 
@@ -12,19 +12,21 @@ class MainWindow(QMainWindow):
     """
     アプリケーションのメインウィンドウを表すクラス
     """
-
     def __init__(self):
         """
         メインウィンドウの初期化を行う
         """
         super().__init__()
 
-        # --- ウィンドウタイトルとサイズを設定
-        self.setWindowTitle("ESTiVision フルトラ GUI")
-        # self.setMinimumSize(1280, 720)
+        # --- タイトル設定
+        self.setWindowTitle("ESTiVision")
 
-        # --- UI初期化
+        # --- UI構築
         self._setup_ui()
+
+        # --- 中身にフィットするサイズを計算して横幅を固定
+        self.adjustSize()
+        self.setFixedWidth(self.width())
 
     # ===== UI初期化処理
 
@@ -32,18 +34,23 @@ class MainWindow(QMainWindow):
         """
         UIレイアウトを設定する
         """
-        # --- 中央ウィジェットとレイアウトを作成
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        # ===== スクロール可能なメインUIの作成
 
-        main_layout = QVBoxLayout()
+        # --- 中身のウィジェット（カメラなど）
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
 
-        # --- カメラセクションを作成して追加
+        # --- セクションを追加
         cameras_section = self._create_cameras_section()
-        main_layout.addWidget(cameras_section)
+        content_layout.addWidget(cameras_section)
 
-        # --- レイアウトを中央ウィジェットに設定
-        central_widget.setLayout(main_layout)
+        # --- スクロールエリアを作成して中身をセット
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setWidget(content_widget)
+
+        # --- スクロールエリアをメインに設定
+        self.setCentralWidget(scroll_area)
 
     # ===== カメラセクションの作成
 
