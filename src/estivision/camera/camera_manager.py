@@ -13,7 +13,9 @@ class QtCameraManager(QObject):
 
 
     def __init__(self) -> None:
-        """QMediaDevices の videoInputsChanged シグナルを監視して初期一覧を通知する"""
+        """
+        QMediaDevices の videoInputsChanged シグナルを監視して初期一覧を通知する
+        """
         super().__init__()
 
         # ===== QMediaDevices インスタンス化
@@ -45,7 +47,9 @@ class QtCameraManager(QObject):
 
 
     def _notify(self) -> None:
-        """現在のデバイス名一覧を Signal で送出する"""
+        """
+        現在のデバイス名一覧を Signal で送出する
+        """
         # ===== デバイス名抽出
         names: List[str] = [dev.description() for dev in self._devices]
 
@@ -54,12 +58,16 @@ class QtCameraManager(QObject):
 
 
     def device_ids(self) -> List[str]:
-        """内部識別子（deviceId）の一覧を返す"""
+        """
+        内部識別子（deviceId）の一覧を返す
+        """
         # ===== deviceId 抽出
         return [dev.deviceId() for dev in self._devices]
 
 
     def device_count(self) -> int:
-        """接続中のカメラ台数を返す"""
+        """
+        接続中のカメラ台数を返す
+        """
         # ===== 台数カウント
         return len(self._devices)

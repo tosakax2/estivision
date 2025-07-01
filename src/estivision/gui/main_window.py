@@ -112,9 +112,6 @@ class MainWindow(QMainWindow):
     def _create_camera_group(self, camera_id: int) -> tuple[QGroupBox, QComboBox, QLabel]:
         """
         指定したカメラIDに対応するカメラグループを作成する
-
-        :param camera_id: カメラ番号 (1 または 2)
-        :return: (グループボックス, コンボボックス, 映像表示ラベル)
         """
         # --- カメラ選択用コンボボックス
         combo: QComboBox = QComboBox()
