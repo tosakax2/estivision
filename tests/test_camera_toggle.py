@@ -80,11 +80,6 @@ def main() -> None:
     manager.cameras_changed.connect(on_cameras_changed)
     # =====
 
-    # ===== 初回デバイス一覧通知 =====
-    # --- 確実に初期一覧を表示するため notify を直接呼び出し
-    manager._notify()
-    # =====
-
     # ===== デバイス抜き差しトグル開始 =====
     # --- 別スレッドでデバイストグル処理を実行
     threading.Thread(target=toggle_device, daemon=True).start()

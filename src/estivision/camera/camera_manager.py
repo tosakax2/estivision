@@ -3,7 +3,7 @@ from typing import List
 # =====
 
 # ===== PySide6 コアモジュールのインポート =====
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, QTimer
 # =====
 
 # ===== PySide6 マルチメディアモジュールのインポート =====
@@ -37,9 +37,9 @@ class QtCameraManager(QObject):
         self._devices: List[QCameraDevice] = self._media_dev.videoInputs()
         # =====
 
-        # ===== 初回通知実行 =====
-        # --- 接続中カメラ名リストを emit
-        self._notify()
+        # ===== 初回通知を次のイベントループで emit =====
+        # --- シグナル接続後に必ず届くよう、0ms 後に呼び出しをスケジュール
+        QTimer.singleShot(0, self._notify)
         # =====
 
     def _on_devices_changed(self, *args) -> None:
