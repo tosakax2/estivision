@@ -9,4 +9,3 @@ rich
 python-osc
 pykalman
 numba
-wmi

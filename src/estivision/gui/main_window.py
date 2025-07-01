@@ -31,7 +31,6 @@ class MainWindow(QMainWindow):
 
 
     # ===== UI初期化処理
-
     def _setup_ui(self) -> None:
         """
         UIレイアウトを設定する
@@ -80,7 +79,6 @@ class MainWindow(QMainWindow):
 
 
     # ===== カメラセクションの作成
-
     def _create_cameras_section(self) -> QGroupBox:
         """
         複数のカメラグループを横並びにして1つのセクションとして返す
@@ -111,7 +109,6 @@ class MainWindow(QMainWindow):
 
 
     # ===== 個別カメラグループの作成
-
     def _create_camera_group(self, camera_id: int) -> tuple[QGroupBox, QComboBox, QLabel]:
         """
         指定したカメラIDに対応するカメラグループを作成する
