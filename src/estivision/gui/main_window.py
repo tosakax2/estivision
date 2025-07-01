@@ -1,7 +1,7 @@
 # ===== 標準ライブラリのインポート =====
 # --- 型ヒント用
 from typing import Tuple
-# ==========
+# =====
 
 # ===== PySide6 ウィジェット関連のインポート =====
 # --- メインウィンドウ、レイアウト、ウィジェット用
@@ -9,17 +9,17 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
     QHBoxLayout, QGroupBox, QComboBox, QScrollArea
 )
-# ==========
+# =====
 
 # ===== PySide6 コアモジュールのインポート =====
 # --- Qt の定数やフラグ用
 from PySide6.QtCore import Qt
-# ==========
+# =====
 
 # ===== 自作モジュールのインポート（相対パス） =====
 # --- GUIのスタイル定義（色定数）を取得
 from .style_constants import BACKGROUND_COLOR, FOREGROUND_COLOR
-# ==========
+# =====
 
 class MainWindow(QMainWindow):
     """
@@ -35,18 +35,18 @@ class MainWindow(QMainWindow):
         # ===== ウィンドウタイトル設定 =====
         # --- アプリケーション名をタイトルバーに表示
         self.setWindowTitle("ESTiVision")
-        # ==========
+        # =====
 
         # ===== UI構築 =====
         # --- レイアウトやウィジェットを初期化
         self._setup_ui()
-        # ==========
+        # =====
 
         # ===== ウィンドウ幅を中身にフィットさせ固定 =====
         # --- サイズを計算してから横幅のみ固定
         self.adjustSize()
         self.setFixedWidth(self.width())
-        # ==========
+        # =====
 
     # ===== UI初期化処理 =====
     def _setup_ui(self) -> None:
@@ -60,13 +60,13 @@ class MainWindow(QMainWindow):
         content_layout: QVBoxLayout = QVBoxLayout(content_widget)
         # --- 上寄せにして余白を下に伸ばす
         content_layout.setAlignment(Qt.AlignTop)
-        # ==========
+        # =====
 
         # ===== カメラ選択セクションの追加 =====
         # --- QGroupBoxでまとめたカメラセクションを生成
         cameras_section: QGroupBox = self._create_cameras_section()
         content_layout.addWidget(cameras_section)
-        # ==========
+        # =====
 
         # ===== コンテンツ幅の調整 =====
         # --- セクションの推奨幅を取得して固定
@@ -75,7 +75,7 @@ class MainWindow(QMainWindow):
         # --- 枠線が切れないよう少し余白を追加
         margin_compensation: int = 8
         content_widget.setFixedWidth(content_width + margin_compensation)
-        # ==========
+        # =====
 
         # ===== スクロールエリアの生成と設定 =====
         scroll_area: QScrollArea = QScrollArea()
@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         # --- メインウィンドウの中央ウィジェットとして設定
         self.setCentralWidget(scroll_area)
-        # ==========
+        # =====
 
         # ===== ウィンドウ幅の最終調整 =====
         # --- コンテンツ＋スクロールバー＋フレーム幅＋余白を考慮して固定
@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
         frame_padding: int = scroll_area.frameWidth() * 2  # フレーム幅分のパディング取得
         total_width: int = content_width + scroll_bar_width + frame_padding + margin_compensation
         self.setFixedWidth(total_width)
-        # ==========
+        # =====
 
     # ===== カメラセクションの作成 =====
     def _create_cameras_section(self) -> QGroupBox:
@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
         # ===== 各カメラグループの生成 =====
         camera1_group, self.camera1_combo, self.camera1_label = self._create_camera_group(1)
         camera2_group, self.camera2_combo, self.camera2_label = self._create_camera_group(2)
-        # ==========
+        # =====
 
         # ===== レイアウト設定 =====
         layout: QHBoxLayout = QHBoxLayout()
@@ -119,12 +119,12 @@ class MainWindow(QMainWindow):
         layout.setSpacing(16)
         # --- セクション全体のパディング（left, top, right, bottom）
         layout.setContentsMargins(16, 8, 16, 16)
-        # ==========
+        # =====
 
         # ===== セクション用グループボックスの生成 =====
         group: QGroupBox = QGroupBox("Camera preview")
         group.setLayout(layout)
-        # ==========
+        # =====
 
         return group
 
@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
         combo.addItem("未選択")
         # --- ラベルと同幅に固定
         combo.setFixedWidth(480)
-        # ==========
+        # =====
 
         # ===== ラベルの生成 =====
         label: QLabel = QLabel(f"Camera {camera_id} 映像")
@@ -153,7 +153,7 @@ class MainWindow(QMainWindow):
             color: {FOREGROUND_COLOR};
             border-radius: 8px;
         """)
-        # ==========
+        # =====
 
         # ===== レイアウト生成 =====
         layout: QVBoxLayout = QVBoxLayout()
@@ -164,11 +164,11 @@ class MainWindow(QMainWindow):
         layout.setSizeConstraint(QLayout.SetFixedSize)
         # --- 内側パディング（left, top, right, bottom）を設定
         layout.setContentsMargins(16, 8, 16, 16)
-        # ==========
+        # =====
 
         # ===== グループボックス生成 =====
         group: QGroupBox = QGroupBox(f"Camera {camera_id}")
         group.setLayout(layout)
-        # ==========
+        # =====
 
         return group, combo, label

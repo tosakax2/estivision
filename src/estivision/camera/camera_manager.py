@@ -1,14 +1,14 @@
 # ===== 標準ライブラリのインポート =====
 from typing import List
-# ==========
+# =====
 
 # ===== PySide6 コアモジュールのインポート =====
 from PySide6.QtCore import QObject, Signal
-# ==========
+# =====
 
 # ===== PySide6 マルチメディアモジュールのインポート =====
 from PySide6.QtMultimedia import QMediaDevices, QCameraDevice
-# ==========
+# =====
 
 
 class QtCameraManager(QObject):
@@ -30,17 +30,17 @@ class QtCameraManager(QObject):
         self._media_dev: QMediaDevices = QMediaDevices()
         # --- デバイス変更時に _on_devices_changed を呼び出す
         self._media_dev.videoInputsChanged.connect(self._on_devices_changed)
-        # ==========
+        # =====
 
         # ===== 初期デバイス一覧取得 =====
         # --- 現在接続中の QCameraDevice オブジェクト一覧をキャッシュ
         self._devices: List[QCameraDevice] = self._media_dev.videoInputs()
-        # ==========
+        # =====
 
         # ===== 初回通知実行 =====
         # --- 接続中カメラ名リストを emit
         self._notify()
-        # ==========
+        # =====
 
     def _on_devices_changed(self, *args) -> None:
         """
@@ -49,12 +49,12 @@ class QtCameraManager(QObject):
         # ===== デバイスリスト更新 =====
         # --- 最新のビデオ入力デバイス一覧を再取得
         self._devices = self._media_dev.videoInputs()
-        # ==========
+        # =====
 
         # ===== 変更通知 =====
         # --- 更新後のデバイス名リストを emit
         self._notify()
-        # ==========
+        # =====
 
     def _notify(self) -> None:
         """
@@ -63,12 +63,12 @@ class QtCameraManager(QObject):
         # ===== デバイス名リスト生成 =====
         # --- 各 QCameraDevice の description() をリスト化
         device_names: List[str] = [dev.description() for dev in self._devices]
-        # ==========
+        # =====
 
         # ===== シグナル送信 =====
         # --- cameras_changed シグナルでデバイス名一覧を通知
         self.cameras_changed.emit(device_names)
-        # ==========
+        # =====
 
     def device_ids(self) -> List[str]:
         """

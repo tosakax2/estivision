@@ -8,4 +8,4 @@ SECONDARY_COLOR = "#808080"      # グレー（補助的なUIなど）
 BACKGROUND_COLOR = "#111111"     # 黒（映像背景など）
 FOREGROUND_COLOR = "#F5F5F5"     # 白（文字表示など）
 ACCENT_COLOR = "#FF5733"         # 補助的な注意色
-# ==========
+# =====
