@@ -72,11 +72,15 @@ class QtCameraManager(QObject):
 
     def device_ids(self) -> List[str]:
         """
-        接続中カメラの内部デバイスID(deviceId)一覧を返す。
+        接続中カメラの内部デバイスID一覧を返す。
+        QCameraDevice.id() は QByteArray を返すため文字列化する。
         """
-        # ===== deviceId 抽出 =====
-        # --- 各 QCameraDevice から deviceId() を取得
-        return [dev.deviceId() for dev in self._devices]
+        ids: List[str] = []
+        for dev in self._devices:
+            qba = dev.id()                  # QByteArray
+            # PySide6 では bytes() で変換できる
+            ids.append(bytes(qba).decode(errors="ignore"))
+        return ids
 
     def device_count(self) -> int:
         """
