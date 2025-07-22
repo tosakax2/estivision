@@ -1,14 +1,10 @@
 # ===== 標準ライブラリ・外部ライブラリのインポート =====
 from __future__ import annotations
-
-import sys
-from typing import Callable, Optional
-import cv2                              # OpenCV
-import numpy as np                      # ndarray 型ヒント用
+import cv2
 # =====
 
 # ===== PySide6 モジュールのインポート =====
-from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
 # =====
 
