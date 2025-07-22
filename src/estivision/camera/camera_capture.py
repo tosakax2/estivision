@@ -32,8 +32,24 @@ class CameraCaptureWorker(QThread):
         """スレッド開始時に自動で呼ばれ、フレーム読み込みループを回す。"""
         # --- OpenCV VideoCapture を開く
         cap = cv2.VideoCapture(self._device_id, cv2.CAP_DSHOW)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)   # 必要に応じ調整
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+        # --- カメラデフォルト解像度取得
+        default_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        default_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # --- 長辺を 480px にリサイズし、短辺は比率保持
+        if default_w >= default_h:
+            scale = 480 / default_w if default_w != 0 else 1
+            target_w = 480
+            target_h = int(default_h * scale)
+        else:
+            scale = 480 / default_h if default_h != 0 else 1
+            target_h = 480
+            target_w = int(default_w * scale)
+
+        # --- カメラ解像度とフレームレート設定
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH,  target_w)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, target_h)
         cap.set(cv2.CAP_PROP_FPS,          self._fps)
 
         self._running = cap.isOpened()
