@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
             lambda idx, cid=camera_id: self._on_camera_selected(cid, idx)
         )
 
-        label: QLabel = QLabel(f"Camera {camera_id} 映像")
+        label: QLabel = QLabel(f"Camera {camera_id} 未接続")
         label.setAlignment(Qt.AlignCenter)
         label.setFixedSize(480, 480)
         label.setStyleSheet(f"""
@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
             worker.stop()
             setattr(self, attr, None)
             label.clear()
-            label.setText(f"Camera {cam_id} 映像")
+            label.setText(f"Camera {cam_id} 未接続")
 
         # --- 「未選択」が選ばれた場合はここで終了
         if index == 0:
