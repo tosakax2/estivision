@@ -327,13 +327,13 @@ class MainWindow(QMainWindow):
         )
         calib_worker.finished.connect(
             lambda res, lbl=status_lbl, btn=calib_btn, prog=progress,
-            worker_attr=attr_worker, strm=stream, slot=update_slot:
-                self._on_calibration_finished(lbl, btn, prog, worker_attr, strm, res, slot)
+            worker_attr=attr_worker:
+                self._on_calibration_finished(lbl, btn, prog, worker_attr, res)
         )
         calib_worker.failed.connect(
             lambda msg, lbl=status_lbl, btn=calib_btn, prog=progress,
-            worker_attr=attr_worker, strm=stream, slot=update_slot:
-                self._on_calibration_failed(lbl, btn, prog, worker_attr, strm, msg, slot)
+            worker_attr=attr_worker:
+                self._on_calibration_failed(lbl, btn, prog, worker_attr, msg)
         )
 
         calib_worker.start()
@@ -358,9 +358,7 @@ class MainWindow(QMainWindow):
         calib_btn: QPushButton,
         progress: QProgressBar,
         worker_attr: str,
-        stream: CameraStream,
         result: object,
-        update_slot
     ) -> None:
         """
         キャリブレーション完了時。
@@ -381,9 +379,7 @@ class MainWindow(QMainWindow):
         calib_btn: QPushButton,
         progress: QProgressBar,
         worker_attr: str,
-        stream: CameraStream,
         message: str,
-        update_slot
     ) -> None:
         """
         キャリブレーション失敗時。
