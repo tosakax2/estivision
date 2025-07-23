@@ -3,6 +3,10 @@ from typing import Tuple, List
 from pathlib import Path
 # =====
 
+# ===== numpy のインポート =====
+import numpy as np
+# =====
+
 # ===== PySide6 ウィジェット関連のインポート =====
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
@@ -220,11 +224,17 @@ class MainWindow(QMainWindow):
         # --- キャリブレーション済みかチェック
         npz_path = Path(f"data/calib_cam{device_id}.npz")
         if npz_path.exists():
-            status_lbl.setText("キャリブレーション完了")
-            status_lbl.setStyleSheet(f"color: {SUCCESS_COLOR};")
+            try:
+                import numpy as np
+                npz = np.load(npz_path)
+                error = float(npz.get("reprojection_error", np.nan))
+            except Exception:
+                error = None
+            self._set_calib_status_label(status_lbl, error)
         else:
-            status_lbl.setText("未キャリブレーション")
             status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
+            status_lbl.setTextFormat(Qt.PlainText)
+            status_lbl.setText("未キャリブレーション")
 
         # --- 重複選択チェック
         if other_combo.currentIndex() == index:
@@ -323,8 +333,9 @@ class MainWindow(QMainWindow):
         """
         progress.setVisible(False)
         status_lbl.setVisible(True)
-        status_lbl.setText("キャリブレーション完了")
-        status_lbl.setStyleSheet(f"color: {SUCCESS_COLOR};")
+        error = result.get("reprojection_error", None)
+        self._set_calib_status_label(status_lbl, error)
+
         calib_btn.setEnabled(True)
 
         # --- ストリームとの接続解除
@@ -383,6 +394,28 @@ class MainWindow(QMainWindow):
         worker = self.calib1_worker if cam_id == 1 else self.calib2_worker
 
         calib_btn.setEnabled(combo.currentIndex() != 0 and worker is None)
+    
+    def _set_calib_status_label(self, status_lbl: QLabel, error: float | None, threshold: float = 1.0) -> None:
+        """
+        キャリブレーション完了時または再選択時のステータスラベル表示を共通化する。
+        """
+        status_lbl.setStyleSheet("")  # 色指定リセット（qdarkstyleデフォルトに）
+        from .style_constants import SUCCESS_COLOR, WARNING_COLOR
+        if error is not None and not (isinstance(error, float) and (error != error)):  # NaN防止
+            if error > threshold:
+                error_color = WARNING_COLOR
+            else:
+                error_color = SUCCESS_COLOR
+            msg = (
+                "キャリブレーション完了<br>"
+                "再投影誤差："
+                f"<span style='color:{error_color}; font-weight:bold'>{error:.2f}px</span>"
+            )
+            status_lbl.setTextFormat(Qt.RichText)
+            status_lbl.setText(msg)
+        else:
+            status_lbl.setTextFormat(Qt.PlainText)
+            status_lbl.setText("キャリブレーション完了")
 
     # --------------------------------------------------------------------- #
     # ウィンドウクローズ                                                     #

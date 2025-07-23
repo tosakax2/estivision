@@ -100,11 +100,13 @@ class FrameCalibrator(QThread):
             self.failed.emit("キャリブレーションに失敗しました。")
             return
 
-        np.savez(self._save_path, camera_matrix=mtx, dist_coeffs=dist, rvecs=rvecs, tvecs=tvecs)
+        # --- キャリブレーション完了時の保存
+        np.savez(self._save_path, camera_matrix=mtx, dist_coeffs=dist, rvecs=rvecs, tvecs=tvecs, reprojection_error=ret)
 
         self.finished.emit({
             "camera_matrix": mtx,
             "dist_coeffs": dist,
+            "reprojection_error": ret,
             "file": str(self._save_path)
         })
     # =====
