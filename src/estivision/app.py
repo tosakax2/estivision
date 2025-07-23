@@ -1,6 +1,8 @@
 # ===== 標準ライブラリ・外部ライブラリのインポート =====
 import sys
 from PySide6.QtWidgets import QApplication
+from PySide6.QtGui import QFont
+import qdarkstyle
 # =====
 
 # ===== 自作モジュールのインポート（相対パス） =====
@@ -14,6 +16,10 @@ def main() -> None:
     # ===== QApplication の初期化 =====
     # --- コマンドライン引数を渡して QApplication インスタンスを生成
     app: QApplication = QApplication(sys.argv)
+    # --- スタイルを適用
+    font = QFont("Arial", 10)
+    app.setFont(font)
+    app.setStyleSheet(qdarkstyle.load_stylesheet())
     # =====
 
     # ===== メインウィンドウの生成・表示 =====

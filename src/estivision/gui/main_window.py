@@ -78,11 +78,6 @@ class MainWindow(QMainWindow):
         content_layout.addWidget(cameras_section)
         # =====
 
-        # ===== コンテンツ幅の調整 =====
-        content_width: int = cameras_section.sizeHint().width()
-        content_widget.setFixedWidth(content_width + 8)  # 枠線余白分を追加
-        # =====
-
         # ===== スクロールエリアの生成と設定 =====
         scroll_area: QScrollArea = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -93,9 +88,9 @@ class MainWindow(QMainWindow):
         # =====
 
         # ===== ウィンドウ幅の最終調整 =====
+        content_width: int = cameras_section.sizeHint().width()
         scroll_bar_width = scroll_area.verticalScrollBar().sizeHint().width()
-        frame_padding = scroll_area.frameWidth() * 2
-        total_width = content_width + scroll_bar_width + frame_padding + 8
+        total_width = content_width + scroll_bar_width + 24
         self.adjustSize()
         self.setFixedWidth(total_width)
         # =====
@@ -113,7 +108,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(camera2_group)
         layout.setSizeConstraint(QLayout.SetFixedSize)
         layout.setSpacing(16)
-        layout.setContentsMargins(16, 8, 16, 16)
+        layout.setContentsMargins(16, 16, 16, 16)
 
         group: QGroupBox = QGroupBox("Camera preview")
         group.setLayout(layout)
@@ -145,7 +140,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(combo)
         layout.addWidget(label)
         layout.setSizeConstraint(QLayout.SetFixedSize)
-        layout.setContentsMargins(16, 8, 16, 16)
+        layout.setContentsMargins(16, 16, 16, 16)
 
         group: QGroupBox = QGroupBox(f"Camera {camera_id}")
         group.setLayout(layout)

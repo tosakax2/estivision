@@ -6,6 +6,7 @@ opencv-python
 pykalman
 python-osc
 PySide6
+qdarkstyle
 rich
 scipy
 tensorflow-cpu
