@@ -3,6 +3,7 @@ numba
 numpy
 onnxruntime
 opencv-python
+Pillow
 pykalman
 python-osc
 PySide6

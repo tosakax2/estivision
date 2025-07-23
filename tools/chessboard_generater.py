@@ -1,0 +1,79 @@
+# ===== 標準ライブラリのインポート =====
+from pathlib import Path
+from typing import Tuple
+# =====
+
+# ===== 外部ライブラリのインポート =====
+import numpy as np
+from PIL import Image
+# =====
+
+
+def mm_to_px(mm: float, dpi: int) -> int:
+    """mm → px 変換（dpi 指定）。四捨五入で整数化。"""
+    return int(round(mm / 25.4 * dpi))
+
+def generate_chessboard_a4(
+    *,
+    inner_cols: int = 9,                 # 内側コーナー数（横方向）
+    inner_rows: int = 6,                 # 内側コーナー数（縦方向）
+    square_size_mm: float = 20.0,        # 1 マスの一辺 (mm)
+    dpi: int = 300,                      # 印刷解像度
+    portrait: bool = False,               # True=縦向き, False=横向き
+    out_path: Path = Path("images/chessboard_A4_9x6.png"),
+) -> Tuple[int, int]:
+    """
+    A4 サイズぴったりのキャンバス上にチェスボードを描画し PNG 保存。
+    戻り値は (幅px, 高さpx)。
+    """
+    # ===== A4 キャンバスサイズ計算 =====
+    a4_w_mm, a4_h_mm = (210.0, 297.0) if portrait else (297.0, 210.0)
+    canvas_w: int = mm_to_px(a4_w_mm, dpi)
+    canvas_h: int = mm_to_px(a4_h_mm, dpi)
+    # =====
+
+    # ===== チェスボード本体サイズ計算 =====
+    squares_x: int = inner_cols + 1
+    squares_y: int = inner_rows + 1
+    sq_px: int = mm_to_px(square_size_mm, dpi)
+
+    board_w: int = squares_x * sq_px
+    board_h: int = squares_y * sq_px
+    # =====
+
+    # ===== サイズ検証 =====
+    if board_w > canvas_w or board_h > canvas_h:
+        raise ValueError(
+            f"指定の square_size_mm={square_size_mm} では "
+            f"チェスボード({board_w}×{board_h}px) が A4({canvas_w}×{canvas_h}px) に収まりません。"
+            " マスを小さくするか横向き(A3 等)を検討してください。"
+        )
+    # =====
+
+    # ===== 余白 (オフセット) 自動計算 =====
+    offset_x: int = (canvas_w - board_w) // 2  # 左余白
+    offset_y: int = (canvas_h - board_h) // 2  # 上余白
+    # =====
+
+    # ===== キャンバス初期化 (白) =====
+    canvas: np.ndarray = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    # =====
+
+    # ===== 黒マス描画 =====
+    for y in range(squares_y):
+        for x in range(squares_x):
+            if (x + y) % 2 == 0:  # 偶奇で黒白判定
+                left: int = offset_x + x * sq_px
+                top: int = offset_y + y * sq_px
+                canvas[top : top + sq_px, left : left + sq_px] = 0
+    # =====
+
+    # ===== 保存 =====
+    Image.fromarray(canvas, mode="L").save(out_path, format="PNG", compress_level=0, dpi=(dpi, dpi))
+    print(f"Saved '{out_path}'  ({canvas_w}×{canvas_h}px @ {dpi} dpi)")
+    # =====
+
+    return canvas_w, canvas_h
+
+if __name__ == "__main__":
+    generate_chessboard_a4()
