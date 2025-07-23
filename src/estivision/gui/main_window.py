@@ -7,7 +7,7 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
     QHBoxLayout, QGroupBox, QComboBox, QScrollArea,
-    QMessageBox, QPushButton
+    QMessageBox, QPushButton, QProgressBar
 )
 # =====
 
@@ -96,9 +96,11 @@ class MainWindow(QMainWindow):
         """
         カメラ 1・2 のプレビューグループを並べる。
         """
-        (grp1, self.camera1_combo, self.camera1_label, self.calib1_btn, self.calib1_status) = self._create_camera_group(1)
+        (grp1, self.camera1_combo, self.camera1_label, self.calib1_btn,
+         self.calib1_status, self.calib1_progress) = self._create_camera_group(1)
 
-        (grp2, self.camera2_combo, self.camera2_label, self.calib2_btn, self.calib2_status) = self._create_camera_group(2)
+        (grp2, self.camera2_combo, self.camera2_label, self.calib2_btn,
+         self.calib2_status, self.calib2_progress) = self._create_camera_group(2)
 
         layout = QHBoxLayout()
         layout.addWidget(grp1)
@@ -114,7 +116,7 @@ class MainWindow(QMainWindow):
     def _create_camera_group(
         self,
         cam_id: int
-    ) -> Tuple[QGroupBox, QComboBox, QLabel, QPushButton, QLabel]:
+    ) -> Tuple[QGroupBox, QComboBox, QLabel, QPushButton, QLabel, QProgressBar]:
         """
         cam_id 用の UI グループ生成。
         """
@@ -144,17 +146,24 @@ class MainWindow(QMainWindow):
         status_lbl.setAlignment(Qt.AlignCenter)
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
 
+        progress = QProgressBar()
+        progress.setRange(0, 100)
+        progress.setValue(0)
+        progress.setFixedWidth(480)
+        progress.setVisible(False)
+
         vbox = QVBoxLayout()
         vbox.addWidget(combo)
         vbox.addWidget(label)
         vbox.addWidget(calib_btn)
         vbox.addWidget(status_lbl)
+        vbox.addWidget(progress)
         vbox.setSizeConstraint(QLayout.SetFixedSize)
         vbox.setContentsMargins(16, 16, 16, 16)
 
         group = QGroupBox(f"Camera {cam_id}")
         group.setLayout(vbox)
-        return group, combo, label, calib_btn, status_lbl
+        return group, combo, label, calib_btn, status_lbl, progress
 
     # --------------------------------------------------------------------- #
     # カメラリスト更新                                                       #
@@ -183,6 +192,7 @@ class MainWindow(QMainWindow):
         label = self.camera1_label if cam_id == 1 else self.camera2_label
         calib_btn = self.calib1_btn if cam_id == 1 else self.calib2_btn
         status_lbl = self.calib1_status if cam_id == 1 else self.calib2_status
+        progress = self.calib1_progress if cam_id == 1 else self.calib2_progress
         attr_stream = "cam1_stream" if cam_id == 1 else "cam2_stream"
         other_combo = self.camera2_combo if cam_id == 1 else self.camera1_combo
 
@@ -193,6 +203,8 @@ class MainWindow(QMainWindow):
             setattr(self, attr_stream, None)
         label.clear()
         label.setText(f"Camera {cam_id} 未接続")
+        progress.setVisible(False)
+        progress.setValue(0)
 
         # --- ボタン／ステータス初期化
         calib_btn.setEnabled(False)
@@ -255,6 +267,7 @@ class MainWindow(QMainWindow):
         combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
         calib_btn = self.calib1_btn if cam_id == 1 else self.calib2_btn
         status_lbl = self.calib1_status if cam_id == 1 else self.calib2_status
+        progress = self.calib1_progress if cam_id == 1 else self.calib2_progress
         attr_stream = "cam1_stream" if cam_id == 1 else "cam2_stream"
         attr_worker = "calib1_worker" if cam_id == 1 else "calib2_worker"
 
@@ -268,8 +281,9 @@ class MainWindow(QMainWindow):
 
         # --- UI 更新
         calib_btn.setEnabled(False)
-        status_lbl.setText("キャリブレーション中...")
-        status_lbl.setStyleSheet(f"color: {SUBTEXT_COLOR};")
+        status_lbl.setVisible(False)
+        progress.setValue(0)
+        progress.setVisible(True)
 
         # --- ワーカ生成
         device_id = combo.currentIndex() - 1
@@ -281,18 +295,16 @@ class MainWindow(QMainWindow):
         stream.frame_ready.connect(calib_worker.enqueue_frame)
 
         # --- シグナル接続
-        calib_worker.progress.connect(
-            lambda p, lbl=status_lbl: lbl.setText(f"キャリブレーション中... ({p}%)")
-        )
+        calib_worker.progress.connect(progress.setValue)
         calib_worker.finished.connect(
-            lambda res, lbl=status_lbl, btn=calib_btn,
+            lambda res, lbl=status_lbl, btn=calib_btn, prog=progress,
             worker_attr=attr_worker, strm=stream:
-                self._on_calibration_finished(lbl, btn, worker_attr, strm, res)
+                self._on_calibration_finished(lbl, btn, prog, worker_attr, strm, res)
         )
         calib_worker.failed.connect(
-            lambda msg, lbl=status_lbl, btn=calib_btn,
+            lambda msg, lbl=status_lbl, btn=calib_btn, prog=progress,
             worker_attr=attr_worker, strm=stream:
-                self._on_calibration_failed(lbl, btn, worker_attr, strm, msg)
+                self._on_calibration_failed(lbl, btn, prog, worker_attr, strm, msg)
         )
 
         calib_worker.start()
@@ -301,6 +313,7 @@ class MainWindow(QMainWindow):
         self,
         status_lbl: QLabel,
         calib_btn: QPushButton,
+        progress: QProgressBar,
         worker_attr: str,
         stream: CameraStream,
         result: object
@@ -308,6 +321,8 @@ class MainWindow(QMainWindow):
         """
         キャリブレーション完了時。
         """
+        progress.setVisible(False)
+        status_lbl.setVisible(True)
         status_lbl.setText("キャリブレーション完了")
         status_lbl.setStyleSheet(f"color: {SUCCESS_COLOR};")
         calib_btn.setEnabled(True)
@@ -322,6 +337,7 @@ class MainWindow(QMainWindow):
         self,
         status_lbl: QLabel,
         calib_btn: QPushButton,
+        progress: QProgressBar,
         worker_attr: str,
         stream: CameraStream,
         message: str
@@ -330,6 +346,8 @@ class MainWindow(QMainWindow):
         キャリブレーション失敗時。
         """
         QMessageBox.critical(self, "キャリブレーション失敗", message)
+        progress.setVisible(False)
+        status_lbl.setVisible(True)
         status_lbl.setText("未キャリブレーション")
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
         calib_btn.setEnabled(True)
