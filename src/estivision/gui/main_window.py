@@ -371,6 +371,9 @@ class MainWindow(QMainWindow):
         calib_btn.setEnabled(True)
 
         # --- ワーカ破棄
+        worker = getattr(self, worker_attr)
+        if worker:
+            worker.wait()
         setattr(self, worker_attr, None)
 
     def _on_calibration_failed(
@@ -392,6 +395,9 @@ class MainWindow(QMainWindow):
         calib_btn.setEnabled(True)
 
         # --- ワーカ破棄
+        worker = getattr(self, worker_attr)
+        if worker:
+            worker.wait()
         setattr(self, worker_attr, None)
 
     # --------------------------------------------------------------------- #
