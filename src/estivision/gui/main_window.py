@@ -3,10 +3,6 @@ from typing import Tuple, List
 from pathlib import Path
 # =====
 
-# ===== numpy のインポート =====
-import numpy as np
-# =====
-
 # ===== PySide6 ウィジェット関連のインポート =====
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
@@ -24,9 +20,7 @@ from PySide6.QtGui import QPixmap
 from .style_constants import (
     BACKGROUND_COLOR,
     TEXT_COLOR,
-    SUBTEXT_COLOR,
-    SUCCESS_COLOR,
-    WARNING_COLOR,
+    WARNING_COLOR
 )
 from ..camera.camera_manager import QtCameraManager
 from ..camera.camera_stream import CameraStream
