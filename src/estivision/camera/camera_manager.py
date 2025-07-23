@@ -42,7 +42,7 @@ class QtCameraManager(QObject):
         QTimer.singleShot(0, self._notify)
         # =====
 
-    def _on_devices_changed(self, *args) -> None:
+    def _on_devices_changed(self) -> None:
         """
         デバイスの接続／切断を検知し、キャッシュ更新および通知を行うハンドラ。
         """
