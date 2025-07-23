@@ -197,8 +197,9 @@ class MainWindow(QMainWindow):
             self._update_combo_enabled_states()
             return
 
+        device_id = index - 1
         # --- キャリブレーション済みかチェック
-        npz_path = Path(f"data/calib_cam{cam_id}.npz")
+        npz_path = Path(f"data/calib_cam{device_id}.npz")
         if npz_path.exists():
             status_lbl.setText("キャリブレーション完了")
         else:
@@ -217,7 +218,6 @@ class MainWindow(QMainWindow):
             return
 
         # --- 新ストリーム開始
-        device_id = index - 1
         stream = CameraStream(device_id)
         stream.image_ready.connect(
             lambda qimg, lbl=label: lbl.setPixmap(
@@ -262,7 +262,8 @@ class MainWindow(QMainWindow):
         status_lbl.setText("キャリブレーション中...")
 
         # --- ワーカ生成
-        calib_worker = FrameCalibrator()
+        device_id = combo.currentIndex() - 1
+        calib_worker = FrameCalibrator(device_id=device_id)
         setattr(self, attr_worker, calib_worker)
 
         # --- ストリームからフレームを受信
