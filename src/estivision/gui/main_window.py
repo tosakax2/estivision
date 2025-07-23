@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 # ===== PySide6 ウィジェット関連のインポート =====
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
+    QMainWindow, QWidget, QLabel, QPushButton, QLayout, QVBoxLayout,
     QHBoxLayout, QGroupBox, QComboBox, QScrollArea, QMessageBox
 )
 # =====
@@ -21,6 +21,7 @@ from .style_constants import BACKGROUND_COLOR, FOREGROUND_COLOR
 from ..camera.camera_manager import QtCameraManager
 # --- OpenCV キャプチャ用ワーカ
 from ..camera.camera_capture import CameraCaptureWorker
+from ..camera.calibration import CameraCalibrator, CalibrationStatus
 # =====
 
 
@@ -100,8 +101,30 @@ class MainWindow(QMainWindow):
         """
         複数カメラのプレビュー用グループを横並びにまとめたセクションを返す。
         """
-        camera1_group, self.camera1_combo, self.camera1_label = self._create_camera_group(1)
-        camera2_group, self.camera2_combo, self.camera2_label = self._create_camera_group(2)
+        (
+            camera1_group,
+            self.camera1_combo,
+            self.camera1_label,
+            self.cam1_calib_btn,
+            self.cam1_status_label,
+        ) = self._create_camera_group(1)
+        (
+            camera2_group,
+            self.camera2_combo,
+            self.camera2_label,
+            self.cam2_calib_btn,
+            self.cam2_status_label,
+        ) = self._create_camera_group(2)
+
+        self.cam1_calibrator = CameraCalibrator()
+        self.cam1_calibrator.status_changed.connect(self.cam1_status_label.setText)
+        self.cam1_status_label.setText(self.cam1_calibrator.status)
+        self.cam2_calibrator = CameraCalibrator()
+        self.cam2_calibrator.status_changed.connect(self.cam2_status_label.setText)
+        self.cam2_status_label.setText(self.cam2_calibrator.status)
+
+        self.cam1_calib_btn.clicked.connect(lambda: self._start_calibration(1))
+        self.cam2_calib_btn.clicked.connect(lambda: self._start_calibration(2))
 
         layout: QHBoxLayout = QHBoxLayout()
         layout.addWidget(camera1_group)
@@ -115,7 +138,9 @@ class MainWindow(QMainWindow):
         return group
 
     # ===== 個別カメラグループの作成 =====
-    def _create_camera_group(self, camera_id: int) -> Tuple[QGroupBox, QComboBox, QLabel]:
+    def _create_camera_group(
+        self, camera_id: int
+    ) -> Tuple[QGroupBox, QComboBox, QLabel, QPushButton, QLabel]:
         """
         指定 ID のカメラ用コンボボックスと映像表示ラベルを含むグループを生成する。
         """
@@ -136,15 +161,20 @@ class MainWindow(QMainWindow):
             border-radius: 8px;
         """)
 
+        calib_button = QPushButton("キャリブレーション開始")
+        status_label = QLabel(CalibrationStatus.NOT_CALIBRATED)
+
         layout: QVBoxLayout = QVBoxLayout()
         layout.addWidget(combo)
         layout.addWidget(label)
+        layout.addWidget(calib_button)
+        layout.addWidget(status_label)
         layout.setSizeConstraint(QLayout.SetFixedSize)
         layout.setContentsMargins(16, 16, 16, 16)
 
         group: QGroupBox = QGroupBox(f"Camera {camera_id}")
         group.setLayout(layout)
-        return group, combo, label
+        return group, combo, label, calib_button, status_label
 
     # ===== カメラ一覧更新ハンドラ =====
     def _on_cameras_changed(self, device_names: List[str]) -> None:
@@ -168,9 +198,10 @@ class MainWindow(QMainWindow):
         """
         コンボボックスでカメラが選択／未選択になったときの処理。
         """
-        combo  = self.camera1_combo if cam_id == 1 else self.camera2_combo
-        label  = self.camera1_label if cam_id == 1 else self.camera2_label
-        attr   = "cam1_worker" if cam_id == 1 else "cam2_worker"
+        combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
+        label = self.camera1_label if cam_id == 1 else self.camera2_label
+        attr = "cam1_worker" if cam_id == 1 else "cam2_worker"
+        calibrator = self.cam1_calibrator if cam_id == 1 else self.cam2_calibrator
         other_combo = self.camera2_combo if cam_id == 1 else self.camera1_combo
 
         # --- 既存ワーカを停止
@@ -180,6 +211,7 @@ class MainWindow(QMainWindow):
             setattr(self, attr, None)
             label.clear()
             label.setText(f"Camera {cam_id} 未接続")
+            calibrator.reset()
 
         # --- 「未選択」が選ばれた場合はここで終了
         if index == 0:
@@ -214,6 +246,7 @@ class MainWindow(QMainWindow):
                 )
             )
         )
+        calibrator.reset()
         # 将来: worker.frame_ready.connect(self.pose_estimator.enqueue)
         worker.start()
         setattr(self, attr, worker)
@@ -238,12 +271,25 @@ class MainWindow(QMainWindow):
             item1.setEnabled(idx == 0 or idx != selected2)
             item2.setEnabled(idx == 0 or idx != selected1)
 
+    def _start_calibration(self, cam_id: int) -> None:
+        """Start calibration for the specified camera if running."""
+        worker = self.cam1_worker if cam_id == 1 else self.cam2_worker
+        calibrator = self.cam1_calibrator if cam_id == 1 else self.cam2_calibrator
+        if worker is None:
+            QMessageBox.warning(self, "カメラ未接続", "キャリブレーションするカメラを選択してください。")
+            return
+        calibrator.start(worker)
+
     # ===== closeEvent オーバーライド =====
     def closeEvent(self, event) -> None:  # type: ignore[override]
         """
         ウィンドウが閉じられるときにキャプチャスレッドを停止する。
         """
-        for worker in (self.cam1_worker, self.cam2_worker):
+        for worker, calibrator in (
+            (self.cam1_worker, self.cam1_calibrator),
+            (self.cam2_worker, self.cam2_calibrator),
+        ):
             if worker:
                 worker.stop()
+            calibrator.reset()
         super().closeEvent(event)
