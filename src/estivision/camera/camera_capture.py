@@ -19,7 +19,9 @@ class CameraCaptureWorker(QThread):
     frame_ready: Signal = Signal(object)   # ndarray を object で渡す
 
     def __init__(self, device_id: str | int, fps: int = 30) -> None:
-        """キャプチャ用スレッドを初期化する。"""
+        """
+        キャプチャ用スレッドを初期化する。
+        """
         super().__init__()
         # ===== 引数保持 =====
         self._device_id = device_id
@@ -29,7 +31,9 @@ class CameraCaptureWorker(QThread):
 
     # ===== スレッド本体 =====
     def run(self) -> None:  # noqa: D401
-        """スレッド開始時に自動で呼ばれ、フレーム読み込みループを回す。"""
+        """
+        スレッド開始時に自動で呼ばれ、フレーム読み込みループを回す。
+        """
         # --- OpenCV VideoCapture を開く
         cap = cv2.VideoCapture(self._device_id, cv2.CAP_DSHOW)
 
@@ -79,7 +83,9 @@ class CameraCaptureWorker(QThread):
 
     # ===== 外部停止リクエスト =====
     def stop(self) -> None:
-        """キャプチャループを停止し、スレッド終了を要求する。"""
+        """
+        キャプチャループを停止し、スレッド終了を要求する。
+        """
         self._running = False
         self.wait()  # スレッドが終了するまでブロック
     # =====

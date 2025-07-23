@@ -10,7 +10,9 @@ from PIL import Image
 
 
 def mm_to_px(mm: float, dpi: int) -> int:
-    """mm → px 変換（dpi 指定）。四捨五入で整数化。"""
+    """
+    mm → px 変換（dpi 指定）。四捨五入で整数化。
+    """
     return int(round(mm / 25.4 * dpi))
 
 def generate_chessboard_a4(
