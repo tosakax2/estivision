@@ -3,7 +3,6 @@ from __future__ import annotations
 import queue
 from pathlib import Path
 from typing import List, Tuple
-from threading import Thread
 import cv2
 import numpy as np
 from PySide6.QtCore import QThread, Signal
@@ -110,27 +109,15 @@ class FrameCalibrator(QThread):
             self.failed.emit("キャリブレーションに失敗しました。")
             return
 
-        result = {
+        # --- キャリブレーション完了時の保存
+        np.savez(self._save_path, camera_matrix=mtx, dist_coeffs=dist, rvecs=rvecs, tvecs=tvecs, reprojection_error=ret)
+
+        self.finished.emit({
             "camera_matrix": mtx,
             "dist_coeffs": dist,
             "reprojection_error": ret,
             "file": str(self._save_path)
-        }
-        self.finished.emit(result)
-
-        # --- キャリブレーション結果を非同期保存
-        Thread(
-            target=np.savez,
-            args=(self._save_path,),
-            kwargs={
-                "camera_matrix": mtx,
-                "dist_coeffs": dist,
-                "rvecs": rvecs,
-                "tvecs": tvecs,
-                "reprojection_error": ret,
-            },
-            daemon=True,
-        ).start()
+        })
     # =====
 
     # ===== 停止要求 =====
