@@ -17,7 +17,13 @@ from PySide6.QtGui import QPixmap
 # =====
 
 # ===== 自作モジュールのインポート（相対パス） =====
-from .style_constants import BACKGROUND_COLOR, FOREGROUND_COLOR, PRIMARY_COLOR
+from .style_constants import (
+    BACKGROUND_COLOR,
+    TEXT_COLOR,
+    SUBTEXT_COLOR,
+    SUCCESS_COLOR,
+    WARNING_COLOR,
+)
 from ..camera.camera_manager import QtCameraManager
 from ..camera.camera_stream import CameraStream
 from ..camera.frame_calibrator import FrameCalibrator
@@ -124,7 +130,7 @@ class MainWindow(QMainWindow):
         label.setFixedSize(480, 480)
         label.setStyleSheet(f"""
             background-color: {BACKGROUND_COLOR};
-            color: {FOREGROUND_COLOR};
+            color: {TEXT_COLOR};
             border-radius: 8px;
         """)
 
@@ -136,7 +142,7 @@ class MainWindow(QMainWindow):
 
         status_lbl = QLabel("未キャリブレーション")
         status_lbl.setAlignment(Qt.AlignCenter)
-        status_lbl.setStyleSheet(f"color: {PRIMARY_COLOR};")
+        status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
 
         vbox = QVBoxLayout()
         vbox.addWidget(combo)
@@ -191,6 +197,7 @@ class MainWindow(QMainWindow):
         # --- ボタン／ステータス初期化
         calib_btn.setEnabled(False)
         status_lbl.setText("未キャリブレーション")
+        status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
 
         # --- 未選択
         if index == 0:
@@ -202,8 +209,10 @@ class MainWindow(QMainWindow):
         npz_path = Path(f"data/calib_cam{device_id}.npz")
         if npz_path.exists():
             status_lbl.setText("キャリブレーション完了")
+            status_lbl.setStyleSheet(f"color: {SUCCESS_COLOR};")
         else:
             status_lbl.setText("未キャリブレーション")
+            status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
 
         # --- 重複選択チェック
         if other_combo.currentIndex() == index:
@@ -260,6 +269,7 @@ class MainWindow(QMainWindow):
         # --- UI 更新
         calib_btn.setEnabled(False)
         status_lbl.setText("キャリブレーション中...")
+        status_lbl.setStyleSheet(f"color: {SUBTEXT_COLOR};")
 
         # --- ワーカ生成
         device_id = combo.currentIndex() - 1
@@ -299,6 +309,7 @@ class MainWindow(QMainWindow):
         キャリブレーション完了時。
         """
         status_lbl.setText("キャリブレーション完了")
+        status_lbl.setStyleSheet(f"color: {SUCCESS_COLOR};")
         calib_btn.setEnabled(True)
 
         # --- ストリームとの接続解除
@@ -320,6 +331,7 @@ class MainWindow(QMainWindow):
         """
         QMessageBox.critical(self, "キャリブレーション失敗", message)
         status_lbl.setText("未キャリブレーション")
+        status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
         calib_btn.setEnabled(True)
 
         # --- ストリームとの接続解除
