@@ -159,7 +159,7 @@ class MainWindow(QMainWindow):
         vbox.addWidget(status_lbl)
         vbox.addWidget(progress)
         vbox.setSizeConstraint(QLayout.SetFixedSize)
-        vbox.setContentsMargins(16, 16, 16, 16)
+        vbox.setContentsMargins(16, 16, 16, 8)
 
         group = QGroupBox(f"Camera {cam_id}")
         group.setLayout(vbox)
