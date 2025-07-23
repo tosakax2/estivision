@@ -16,15 +16,20 @@ def main() -> None:
     # ===== QApplication の初期化 =====
     # --- コマンドライン引数を渡して QApplication インスタンスを生成
     app: QApplication = QApplication(sys.argv)
-    # --- スタイルを適用
-    font = QFont("Arial", 10)
+
+    # --- QDarkStyle のスタイルシートを適用
+    style: str = qdarkstyle.load_stylesheet()
+    app.setStyleSheet(style)
+
+    # --- フォント設定
+    font: QFont = QFont("Arial", 10)
     app.setFont(font)
-    app.setStyleSheet(qdarkstyle.load_stylesheet())
     # =====
 
     # ===== メインウィンドウの生成・表示 =====
     # --- MainWindow クラスをインスタンス化
     window: MainWindow = MainWindow()
+
     # --- ウィンドウを画面に表示
     window.show()
     # =====

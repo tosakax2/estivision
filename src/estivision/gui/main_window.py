@@ -89,8 +89,8 @@ class MainWindow(QMainWindow):
 
         # ===== ウィンドウ幅の最終調整 =====
         content_width: int = cameras_section.sizeHint().width()
-        scroll_bar_width = scroll_area.verticalScrollBar().sizeHint().width()
-        total_width = content_width + scroll_bar_width + 24
+        scroll_bar_width: int = scroll_area.verticalScrollBar().sizeHint().width()
+        total_width: int = content_width + scroll_bar_width + 24
         self.adjustSize()
         self.setFixedWidth(total_width)
         # =====
@@ -159,7 +159,6 @@ class MainWindow(QMainWindow):
             for name in device_names:     # --- 新しいデバイス名を追加
                 combo.addItem(name)
             combo.blockSignals(False)     # --- シグナル再有効化
-        # =====
 
         # --- 重複無効化状態を更新
         self._update_combo_enabled_states()
