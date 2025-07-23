@@ -1,5 +1,6 @@
 # ===== 標準ライブラリのインポート =====
 from typing import Tuple, List
+from pathlib import Path
 # =====
 
 # ===== PySide6 ウィジェット関連のインポート =====
@@ -195,6 +196,13 @@ class MainWindow(QMainWindow):
         if index == 0:
             self._update_combo_enabled_states()
             return
+
+        # --- キャリブレーション済みかチェック
+        npz_path = Path(f"data/calib_cam{cam_id}.npz")
+        if npz_path.exists():
+            status_lbl.setText("キャリブレーション完了")
+        else:
+            status_lbl.setText("未キャリブレーション")
 
         # --- 重複選択チェック
         if other_combo.currentIndex() == index:

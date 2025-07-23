@@ -25,6 +25,7 @@ class FrameCalibrator(QThread):
         pattern_size: Tuple[int, int] = (9, 6),
         square_size: float = 20.0,
         samples: int = 20,
+        device_id: int = 0,
         save_path: Path | None = None,
         parent=None
     ) -> None:
@@ -34,7 +35,8 @@ class FrameCalibrator(QThread):
         self._pattern_size = pattern_size
         self._square_size = square_size
         self._samples = samples
-        self._save_path = save_path or Path("data/calib_cam.npz")
+        Path("data").mkdir(exist_ok=True)
+        self._save_path = save_path or Path(f"data/calib_cam{device_id}.npz")
         # --- フレームバッファ
         self._queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=100)
         self._running: bool = False
