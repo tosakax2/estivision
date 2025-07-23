@@ -20,6 +20,7 @@ class FrameCalibrator(QThread):
     finished: Signal = Signal(object)    # dict 結果
     failed: Signal = Signal(str)         # 失敗メッセージ
     preview: Signal = Signal(QImage)     # 処理中プレビュー
+    capture_done: Signal = Signal()      # 解析用画像収集完了
 
     def __init__(
         self,
@@ -101,6 +102,9 @@ class FrameCalibrator(QThread):
         if collected < self._samples:
             self.failed.emit("十分なサンプルが集まりませんでした。")
             return
+
+        if collected >= self._samples:
+            self.capture_done.emit()
 
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             obj_pts, img_pts, gray.shape[::-1], None, None

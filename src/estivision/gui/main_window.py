@@ -321,6 +321,10 @@ class MainWindow(QMainWindow):
 
         # --- シグナル接続
         calib_worker.progress.connect(progress.setValue)
+        calib_worker.capture_done.connect(
+            lambda strm=stream, slot=update_slot, worker_attr=attr_worker:
+                self._on_capture_done(strm, slot, worker_attr)
+        )
         calib_worker.finished.connect(
             lambda res, lbl=status_lbl, btn=calib_btn, prog=progress,
             worker_attr=attr_worker, strm=stream, slot=update_slot:
@@ -333,6 +337,20 @@ class MainWindow(QMainWindow):
         )
 
         calib_worker.start()
+
+    def _on_capture_done(
+        self,
+        stream: CameraStream,
+        update_slot,
+        worker_attr: str,
+    ) -> None:
+        """撮影終了時にプレビュー接続を戻す。"""
+        stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
+        try:
+            getattr(self, worker_attr).preview.disconnect(update_slot)
+        except Exception:
+            pass
+        stream.image_ready.connect(update_slot)
 
     def _on_calibration_finished(
         self,
@@ -353,14 +371,6 @@ class MainWindow(QMainWindow):
         self._set_calib_status_label(status_lbl, error)
 
         calib_btn.setEnabled(True)
-
-        # --- ストリームとの接続解除
-        stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
-        try:
-            getattr(self, worker_attr).preview.disconnect(update_slot)
-        except Exception:
-            pass
-        stream.image_ready.connect(update_slot)
 
         # --- ワーカ破棄
         setattr(self, worker_attr, None)
@@ -384,14 +394,6 @@ class MainWindow(QMainWindow):
         status_lbl.setText("未キャリブレーション")
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
         calib_btn.setEnabled(True)
-
-        # --- ストリームとの接続解除
-        stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
-        try:
-            getattr(self, worker_attr).preview.disconnect(update_slot)
-        except Exception:
-            pass
-        stream.image_ready.connect(update_slot)
 
         # --- ワーカ破棄
         setattr(self, worker_attr, None)
