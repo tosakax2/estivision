@@ -6,6 +6,7 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 from PySide6.QtCore import QThread, Signal
+from PySide6.QtGui import QImage
 # =====
 
 
@@ -18,6 +19,7 @@ class FrameCalibrator(QThread):
     progress: Signal = Signal(int)       # 0–100 %
     finished: Signal = Signal(object)    # dict 結果
     failed: Signal = Signal(str)         # 失敗メッセージ
+    preview: Signal = Signal(QImage)     # 処理中プレビュー
 
     def __init__(
         self,
@@ -79,6 +81,9 @@ class FrameCalibrator(QThread):
                 gray, self._pattern_size,
                 cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE
             )
+            disp = frame.copy()
+            if found:
+                cv2.drawChessboardCorners(disp, self._pattern_size, corners, found)
             if found:
                 # --- サブピクセル精緻化
                 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -88,6 +93,10 @@ class FrameCalibrator(QThread):
                 obj_pts.append(objp)
                 collected += 1
                 self.progress.emit(int(collected / self._samples * 100))
+            rgb = cv2.cvtColor(disp, cv2.COLOR_BGR2RGB)
+            h, w, _ = rgb.shape
+            qimg = QImage(rgb.data, w, h, 3 * w, QImage.Format.Format_RGB888)
+            self.preview.emit(qimg)
 
         if collected < self._samples:
             self.failed.emit("十分なサンプルが集まりませんでした。")

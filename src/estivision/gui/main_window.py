@@ -53,6 +53,10 @@ class MainWindow(QMainWindow):
         # UI 構築
         self._setup_ui()
 
+        # プレビュー更新関数
+        self._preview_slot1 = self._make_qimage_updater(self.camera1_label)
+        self._preview_slot2 = self._make_qimage_updater(self.camera2_label)
+
         # カメラ接続監視
         self.qt_cam_mgr: QtCameraManager = QtCameraManager()
         self.qt_cam_mgr.cameras_changed.connect(self._on_cameras_changed)
@@ -169,6 +173,19 @@ class MainWindow(QMainWindow):
         group.setLayout(vbox)
         return group, combo, label, calib_btn, status_lbl, progress
 
+    def _make_qimage_updater(self, label: QLabel):
+        """QImage をラベルへ描画するコールバックを生成。"""
+        def _update(qimg):
+            label.setPixmap(
+                QPixmap.fromImage(qimg).scaled(
+                    480,
+                    480,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+        return _update
+
     # --------------------------------------------------------------------- #
     # カメラリスト更新                                                       #
     # --------------------------------------------------------------------- #
@@ -201,8 +218,13 @@ class MainWindow(QMainWindow):
         other_combo = self.camera2_combo if cam_id == 1 else self.camera1_combo
 
         # --- 既存ストリーム停止
+        update_slot = self._preview_slot1 if cam_id == 1 else self._preview_slot2
         stream: CameraStream | None = getattr(self, attr_stream)
         if stream:
+            try:
+                stream.image_ready.disconnect(update_slot)
+            except Exception:
+                pass
             stream.stop()
             setattr(self, attr_stream, None)
         label.clear()
@@ -250,14 +272,7 @@ class MainWindow(QMainWindow):
 
         # --- 新ストリーム開始
         stream = CameraStream(device_id)
-        stream.image_ready.connect(
-            lambda qimg, lbl=label: lbl.setPixmap(
-                QPixmap.fromImage(qimg).scaled(
-                    480, 480, Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation
-                )
-            )
-        )
+        stream.image_ready.connect(update_slot)
         stream.start()
         setattr(self, attr_stream, stream)
 
@@ -303,18 +318,24 @@ class MainWindow(QMainWindow):
         # --- ストリームからフレームを受信
         stream: CameraStream = getattr(self, attr_stream)
         stream.frame_ready.connect(calib_worker.enqueue_frame)
+        update_slot = self._preview_slot1 if cam_id == 1 else self._preview_slot2
+        try:
+            stream.image_ready.disconnect(update_slot)
+        except Exception:
+            pass
+        calib_worker.preview.connect(update_slot)
 
         # --- シグナル接続
         calib_worker.progress.connect(progress.setValue)
         calib_worker.finished.connect(
             lambda res, lbl=status_lbl, btn=calib_btn, prog=progress,
-            worker_attr=attr_worker, strm=stream:
-                self._on_calibration_finished(lbl, btn, prog, worker_attr, strm, res)
+            worker_attr=attr_worker, strm=stream, slot=update_slot:
+                self._on_calibration_finished(lbl, btn, prog, worker_attr, strm, res, slot)
         )
         calib_worker.failed.connect(
             lambda msg, lbl=status_lbl, btn=calib_btn, prog=progress,
-            worker_attr=attr_worker, strm=stream:
-                self._on_calibration_failed(lbl, btn, prog, worker_attr, strm, msg)
+            worker_attr=attr_worker, strm=stream, slot=update_slot:
+                self._on_calibration_failed(lbl, btn, prog, worker_attr, strm, msg, slot)
         )
 
         calib_worker.start()
@@ -326,7 +347,8 @@ class MainWindow(QMainWindow):
         progress: QProgressBar,
         worker_attr: str,
         stream: CameraStream,
-        result: object
+        result: object,
+        update_slot
     ) -> None:
         """
         キャリブレーション完了時。
@@ -340,6 +362,11 @@ class MainWindow(QMainWindow):
 
         # --- ストリームとの接続解除
         stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
+        try:
+            getattr(self, worker_attr).preview.disconnect(update_slot)
+        except Exception:
+            pass
+        stream.image_ready.connect(update_slot)
 
         # --- ワーカ破棄
         setattr(self, worker_attr, None)
@@ -351,7 +378,8 @@ class MainWindow(QMainWindow):
         progress: QProgressBar,
         worker_attr: str,
         stream: CameraStream,
-        message: str
+        message: str,
+        update_slot
     ) -> None:
         """
         キャリブレーション失敗時。
@@ -365,6 +393,11 @@ class MainWindow(QMainWindow):
 
         # --- ストリームとの接続解除
         stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
+        try:
+            getattr(self, worker_attr).preview.disconnect(update_slot)
+        except Exception:
+            pass
+        stream.image_ready.connect(update_slot)
 
         # --- ワーカ破棄
         setattr(self, worker_attr, None)
