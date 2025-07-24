@@ -267,7 +267,6 @@ class MainWindow(QMainWindow):
         # --- 新ストリーム開始
         stream = CameraStream(device_id)
         stream.image_ready.connect(update_slot)
-        stream.error.connect(lambda msg, cid=cam_id: self._on_stream_error(cid, msg))
         stream.start()
         setattr(self, attr_stream, stream)
 
@@ -400,15 +399,6 @@ class MainWindow(QMainWindow):
         if worker:
             worker.wait()
         setattr(self, worker_attr, None)
-
-    def _on_stream_error(self, cam_id: int, message: str) -> None:
-        """CameraStream からのエラー受信時。"""
-        QMessageBox.critical(self, "カメラ接続失敗", message)
-        combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
-        combo.blockSignals(True)
-        combo.setCurrentIndex(0)
-        combo.blockSignals(False)
-        self._on_camera_selected(cam_id, 0)
 
     # --------------------------------------------------------------------- #
     # UI ヘルパ                                                              #
