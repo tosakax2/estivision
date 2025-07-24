@@ -209,6 +209,7 @@ class MainWindow(QMainWindow):
         status_lbl = self.calib1_status if cam_id == 1 else self.calib2_status
         progress = self.calib1_progress if cam_id == 1 else self.calib2_progress
         attr_stream = "cam1_stream" if cam_id == 1 else "cam2_stream"
+        attr_worker = "calib1_worker" if cam_id == 1 else "calib2_worker"
         other_combo = self.camera2_combo if cam_id == 1 else self.camera1_combo
 
         # --- 既存ストリーム停止
@@ -221,6 +222,21 @@ class MainWindow(QMainWindow):
                 pass
             stream.stop()
             setattr(self, attr_stream, None)
+
+        # --- キャリブレーションワーカ停止
+        worker: FrameCalibrator | None = getattr(self, attr_worker)
+        if worker:
+            if stream:
+                try:
+                    stream.frame_ready.disconnect(worker.enqueue_frame)
+                except Exception:
+                    pass
+            try:
+                worker.preview.disconnect(update_slot)
+            except Exception:
+                pass
+            worker.stop()
+            setattr(self, attr_worker, None)
         label.clear()
         label.setText(f"Camera {cam_id} 未接続")
         progress.setVisible(False)
