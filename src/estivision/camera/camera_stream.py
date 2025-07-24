@@ -41,13 +41,13 @@ class CameraStream(QThread):
         default_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         default_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # --- 長辺 480px に縮小
+        # --- 長辺 320px に縮小
         if default_w >= default_h:
-            scale = 480 / default_w if default_w else 1
-            target_w, target_h = 480, int(default_h * scale)
+            scale = 320 / default_w if default_w else 1
+            target_w, target_h = 320, int(default_h * scale)
         else:
-            scale = 480 / default_h if default_h else 1
-            target_h, target_w = 480, int(default_w * scale)
+            scale = 320 / default_h if default_h else 1
+            target_h, target_w = 320, int(default_w * scale)
 
         cap.set(cv2.CAP_PROP_FRAME_WIDTH,  target_w)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, target_h)
