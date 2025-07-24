@@ -73,6 +73,10 @@ def generate_chessboard_a4(
                 canvas_img[top : top + sq_px, left : left + sq_px] = 0
     # =====
 
+    # ===== 保存先ディレクトリ作成 =====
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # =====
+
     # ===== PNG保存 =====
     Image.fromarray(canvas_img, mode="L").save(out_path, format="PNG", compress_level=0, dpi=(dpi, dpi))
     print(f"Saved '{out_path}' ({canvas_w}×{canvas_h}px @{dpi}dpi)")
