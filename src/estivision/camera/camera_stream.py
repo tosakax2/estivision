@@ -14,6 +14,7 @@ class CameraStream(QThread):
     # --- GUI プレビュー／処理用シグナル
     image_ready: Signal = Signal(QImage)
     frame_ready: Signal = Signal(object)  # ndarray (BGR)
+    error: Signal = Signal(str)
 
     def __init__(self, device_id: int, fps: int = 30) -> None:
         """
@@ -32,6 +33,9 @@ class CameraStream(QThread):
         VideoCapture を開き、フレーム取得ループを回す。
         """
         cap = cv2.VideoCapture(self._device_id, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            self.error.emit("カメラを開けませんでした。")
+            return
 
         # --- カメラのデフォルト解像度
         default_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -49,9 +53,7 @@ class CameraStream(QThread):
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, target_h)
         cap.set(cv2.CAP_PROP_FPS,          self._fps)
 
-        self._running = cap.isOpened()
-        if not self._running:
-            return
+        self._running = True
 
         # --- 取得ループ
         while self._running:
