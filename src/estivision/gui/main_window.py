@@ -246,6 +246,7 @@ class MainWindow(QMainWindow):
         calib_btn.setEnabled(False)
         status_lbl.setText("未キャリブレーション")
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
+        status_lbl.setVisible(True)
 
         # --- 未選択
         if index == 0:
