@@ -19,13 +19,13 @@ def mm_to_px(mm: float, dpi: int) -> int:
 
 def generate_chessboard_a4(
     *,
-    inner_cols: int = 9,                 # 内側コーナー数（横方向）
-    inner_rows: int = 6,                 # 内側コーナー数（縦方向）
+    inner_cols: int = 6,                 # 内側コーナー数（横方向）
+    inner_rows: int = 9,                 # 内側コーナー数（縦方向）
     square_size_mm: float = 20.0,        # 1 マスの一辺 (mm)
     dpi: int = 300,                      # 印刷解像度
-    portrait: bool = False,              # True=縦向き, False=横向き
-    out_path: Path = Path("images/chessboard_A4_9x6.png"),
-    out_pdf: Path = Path("images/chessboard_A4_9x6.pdf"),
+    portrait: bool = True,              # True=縦向き, False=横向き
+    out_path: Path = Path("images/chessboard_A4_6x9.png"),
+    out_pdf: Path = Path("images/chessboard_A4_6x9.pdf"),
 ) -> Tuple[int, int]:
     """
     A4 サイズぴったりのキャンバス上にチェスボードを描画し PNG＆PDF保存。
