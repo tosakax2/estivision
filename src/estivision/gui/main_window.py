@@ -488,6 +488,7 @@ class MainWindow(QMainWindow):
 
         for worker in (self.calib1_worker, self.calib2_worker):
             if worker:
+                worker.requestInterruption()
                 worker.stop()
 
         super().closeEvent(event)

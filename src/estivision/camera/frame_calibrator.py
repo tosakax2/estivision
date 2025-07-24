@@ -106,9 +106,15 @@ class FrameCalibrator(QThread):
         if collected >= self._samples:
             self.capture_done.emit()
 
+        if self.isInterruptionRequested():
+            return
+
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             obj_pts, img_pts, gray.shape[::-1], None, None
         )
+
+        if self.isInterruptionRequested():
+            return
         if not ret:
             self.failed.emit("キャリブレーションに失敗しました。")
             return
@@ -130,6 +136,7 @@ class FrameCalibrator(QThread):
         ワーカを停止する。
         """
         self._running = False
+        self.requestInterruption()
         self.wait()
     # =====
 
