@@ -8,6 +8,7 @@ pykalman
 python-osc
 PySide6
 qdarkstyle
+reportlab
 rich
 scipy
 tensorflow-cpu

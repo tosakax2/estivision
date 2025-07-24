@@ -6,8 +6,10 @@ from typing import Tuple
 # ===== 外部ライブラリのインポート =====
 import numpy as np
 from PIL import Image
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
 # =====
-
 
 def mm_to_px(mm: float, dpi: int) -> int:
     """
@@ -23,9 +25,10 @@ def generate_chessboard_a4(
     dpi: int = 300,                      # 印刷解像度
     portrait: bool = False,              # True=縦向き, False=横向き
     out_path: Path = Path("images/chessboard_A4_9x6.png"),
+    out_pdf: Path = Path("images/chessboard_A4_9x6.pdf"),
 ) -> Tuple[int, int]:
     """
-    A4 サイズぴったりのキャンバス上にチェスボードを描画し PNG 保存。
+    A4 サイズぴったりのキャンバス上にチェスボードを描画し PNG＆PDF保存。
     戻り値は (幅px, 高さpx)。
     """
     # ===== A4 キャンバスサイズ計算 =====
@@ -58,7 +61,7 @@ def generate_chessboard_a4(
     # =====
 
     # ===== キャンバス初期化 (白) =====
-    canvas: np.ndarray = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
+    canvas_img: np.ndarray = np.ones((canvas_h, canvas_w), dtype=np.uint8) * 255
     # =====
 
     # ===== 黒マス描画 =====
@@ -67,12 +70,30 @@ def generate_chessboard_a4(
             if (x + y) % 2 == 0:  # 偶奇で黒白判定
                 left: int = offset_x + x * sq_px
                 top: int = offset_y + y * sq_px
-                canvas[top : top + sq_px, left : left + sq_px] = 0
+                canvas_img[top : top + sq_px, left : left + sq_px] = 0
     # =====
 
-    # ===== 保存 =====
-    Image.fromarray(canvas, mode="L").save(out_path, format="PNG", compress_level=0, dpi=(dpi, dpi))
-    print(f"Saved '{out_path}'  ({canvas_w}×{canvas_h}px @ {dpi} dpi)")
+    # ===== PNG保存 =====
+    Image.fromarray(canvas_img, mode="L").save(out_path, format="PNG", compress_level=0, dpi=(dpi, dpi))
+    print(f"Saved '{out_path}' ({canvas_w}×{canvas_h}px @{dpi}dpi)")
+    # =====
+
+    # ===== PDF保存 =====
+    # --- Pillowで一時保存したPNG画像をreportlabでA4に等倍貼り付け
+    c = canvas.Canvas(str(out_pdf), pagesize=(a4_w_mm * mm, a4_h_mm * mm))
+    # --- reportlabのA4原点は左下、Pillowは左上なので注意
+    # --- drawImage(x, y, width, height, ...)
+    c.drawImage(
+        str(out_path),
+        0, 0,  # x, y（左下基準で0,0）
+        a4_w_mm * mm,
+        a4_h_mm * mm,
+        preserveAspectRatio=False,
+        mask='auto'
+    )
+    c.showPage()
+    c.save()
+    print(f"Saved '{out_pdf}' ({a4_w_mm}mm×{a4_h_mm}mm)")
     # =====
 
     return canvas_w, canvas_h
