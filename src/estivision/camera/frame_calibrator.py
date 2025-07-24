@@ -100,6 +100,10 @@ class FrameCalibrator(QThread):
             self.preview.emit(qimg)
 
         if collected < self._samples:
+            # ウィンドウクローズによる停止など、割り込み要求が入った場合は
+            # エラー扱いとせず静かに終了する
+            if self.isInterruptionRequested():
+                return
             self.failed.emit("十分なサンプルが集まりませんでした。")
             return
 
