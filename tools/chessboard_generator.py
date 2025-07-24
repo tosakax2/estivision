@@ -65,12 +65,11 @@ def generate_chessboard_a4(
     # =====
 
     # ===== 黒マス描画 =====
-    for y in range(squares_y):
-        for x in range(squares_x):
-            if (x + y) % 2 == 0:  # 偶奇で黒白判定
-                left: int = offset_x + x * sq_px
-                top: int = offset_y + y * sq_px
-                canvas_img[top : top + sq_px, left : left + sq_px] = 0
+    rows = np.arange(board_h) // sq_px
+    cols = np.arange(board_w) // sq_px
+    checkerboard = (rows[:, None] + cols) % 2 == 0  # True で黒マス
+    board_img = np.where(checkerboard, 0, 255).astype(np.uint8)
+    canvas_img[offset_y : offset_y + board_h, offset_x : offset_x + board_w] = board_img
     # =====
 
     # ===== 保存先ディレクトリ作成 =====
