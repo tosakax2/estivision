@@ -124,14 +124,14 @@ class MainWindow(QMainWindow):
         """
         combo = SafeComboBox()
         combo.addItem("未選択")
-        combo.setFixedWidth(480)
+        combo.setFixedWidth(320)
         combo.currentIndexChanged.connect(
             lambda idx, cid=cam_id: self._on_camera_selected(cid, idx)
         )
 
         label = QLabel(f"Camera {cam_id} 未接続")
         label.setAlignment(Qt.AlignCenter)
-        label.setFixedSize(480, 480)
+        label.setFixedSize(320, 320)
         label.setStyleSheet(f"""
             background-color: {BACKGROUND_COLOR};
             color: {TEXT_COLOR};
@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         progress = QProgressBar()
         progress.setRange(0, 100)
         progress.setValue(0)
-        progress.setFixedWidth(480)
+        progress.setFixedWidth(320)
         progress.setVisible(False)
 
         vbox = QVBoxLayout()
@@ -172,8 +172,8 @@ class MainWindow(QMainWindow):
         def _update(qimg):
             label.setPixmap(
                 QPixmap.fromImage(qimg).scaled(
-                    480,
-                    480,
+                    320,
+                    320,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
