@@ -1,18 +1,67 @@
-# Comment Style Guide
+# コメント規約（Comment Style Guide）
 
-This project uses banner comments for readability. Use the following formats:
+このプロジェクトでは、可読性のために以下のコメント形式を統一して使用します。
 
-- **Section headers and footers**:
+## 1. セクションコメント（Section Headers）
 
-```python
-# ==== Section Title ====
-# ====                     # footer line (optional)
-```
-
-- **Sub-comments**:
+- セクションやまとまりごとの開始には **# ===== タイトル =====** を使います。
+- 必要に応じて区切り用のフッター（`# ===============`）を入れてもよい。
 
 ```python
-# ---- Sub comment ----
+# ===== 初期化処理 =====
+# ===============
 ```
 
-Keep comment text brief and capitalize as needed. End every file with a newline.
+## 2. サブコメント（Sub-section Comments）
+
+- セクション内の補足や小見出しには **# --- 内容 ---** を使います。
+
+```python
+# --- 変数の初期化 ---
+```
+
+## 3. インラインコメント（Inline Comments）
+
+- 行の途中で書くインラインコメントは **#** のみで書きます（`---`や`=====`は付けない）。
+- 内容は簡潔に記述します。
+
+```python
+value = 0  # 初期値
+```
+
+## 4. Docstring の記述ルール
+
+- **すべての関数・クラスには必ず docstring（ドキュメントコメント）を付けること。**
+- docstring は**1 行で簡潔に**まとめる。
+- docstring は\*\*`"""`を改行せず\*\*、1 行で完結するように記述する。
+
+```python
+def add(a: int, b: int) -> int:
+    """2つの整数の和を返す。"""
+    return a + b
+```
+
+## 5. コメントの内容
+
+- 必要最小限で簡潔にまとめること。
+- セクション・サブコメントは冒頭大文字、句点不要。
+- 各ファイルの末尾は必ず改行で終わること。
+
+---
+
+### 例
+
+```python
+# ===== インポート =====
+# --- 標準ライブラリ ---
+import os
+# --- 外部ライブラリ ---
+import numpy as np
+# ===============
+
+
+# ===== メイン処理 =====
+def main() -> None:
+    """メイン処理を実行する。"""
+    value = 0  # 初期値
+```
