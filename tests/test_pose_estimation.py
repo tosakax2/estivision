@@ -38,7 +38,6 @@ def _draw_pose(img: np.ndarray, kps: np.ndarray, scores: np.ndarray, thr: float 
             cv.putText(disp, name, pos, cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
     return disp
 
-
 # --- テスト用フィクスチャ ---
 @pytest.fixture(scope="module")
 def estimator() -> PoseEstimator:
@@ -53,7 +52,6 @@ def estimator() -> PoseEstimator:
         pytest.skip("MoveNet ONNX モデルが見つからないためテストをスキップします。")
     return PoseEstimator(model_type="lightning", model_dir=model_path.parent, providers=["CPUExecutionProvider"])
 
-
 # --- 推論がエラーにならず形状が正しいか確認 ---
 def test_estimate_output_shape(estimator: PoseEstimator) -> None:
     """出力形状 (17,2) / (17,) であることを確認。"""
@@ -63,7 +61,6 @@ def test_estimate_output_shape(estimator: PoseEstimator) -> None:
     assert keypoints.shape == (17, 2)
     assert scores.shape == (17,)
     assert np.all((0 <= scores) & (scores <= 1)), "スコアは 0.0～1.0 の範囲"
-
 
 # --- 既知画像で推論し、スコアが全て 0 ではないことを確認（疎なテスト） ---
 def test_estimate_non_zero(estimator: PoseEstimator, tmp_path) -> None:
@@ -77,7 +74,6 @@ def test_estimate_non_zero(estimator: PoseEstimator, tmp_path) -> None:
     # 少なくとも 1 点は信頼度が 0 を超える（黒画像なら 0 でも OK）
     assert np.any(scores > 0) or np.allclose(img, 0)
 
-
 # --- 推論結果を描画してファイル出力 ---
 def test_draw_and_save(estimator: PoseEstimator, tmp_path) -> None:
     """推論した骨格画像を tests/assets に保存。"""
@@ -90,6 +86,7 @@ def test_draw_and_save(estimator: PoseEstimator, tmp_path) -> None:
     out_path = asset_dir.joinpath("pose_result.png")
     cv.imwrite(out_path.as_posix(), drawn)
     assert out_path.is_file()
+
 
 if __name__ == "__main__":
     print("テストファイルが実行されました")

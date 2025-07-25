@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "estivision"
+version = "0.1.0"
+description = "Webカメラ2台でフルトラッキングするVRChat向け仮想トラッカー"
+authors = [
+  { name = "tosakax2", email = "tosakax2@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+dependencies = [
+  "matplotlib",
+  "numba",
+  "numpy",
+  "onnxruntime",
+  "opencv-python",
+  "Pillow",
+  "pykalman",
+  "python-osc",
+  "PySide6",
+  "qdarkstyle",
+  "reportlab",
+  "scipy",
+  "tensorflow-cpu"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest"
+]
+
+[project.scripts]
+estivision = "estivision.app:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
