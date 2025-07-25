@@ -1,4 +1,4 @@
-# ==== 標準ライブラリ / 外部ライブラリのインポート ====
+# ===== 標準ライブラリ / 外部ライブラリのインポート =====
 from __future__ import annotations
 import queue
 from pathlib import Path
@@ -11,11 +11,9 @@ from PySide6.QtGui import QImage
 
 
 class FrameCalibrator(QThread):
-    """
-    CameraStream から供給されるフレームを用いてキャリブレーションを実行するワーカ。
-    """
+    """CameraStream から供給されるフレームを用いてキャリブレーションを実行するワーカ。"""
 
-    # ---- 進捗／完了／失敗シグナル ----
+    # --- 進捗／完了／失敗シグナル ---
     progress: Signal = Signal(int)       # 0–100 %
     finished: Signal = Signal(object)    # dict 結果
     failed: Signal = Signal(str)         # 失敗メッセージ
@@ -34,22 +32,20 @@ class FrameCalibrator(QThread):
     ) -> None:
         """コンストラクタ。"""
         super().__init__(parent)
-        # ==== 引数保持 ====
+        # ===== 引数保持 =====
         self._pattern_size = pattern_size
         self._square_size = square_size
         self._samples = samples
         Path("data").mkdir(exist_ok=True)
         self._save_path = save_path or Path(f"data/calib_cam{device_id}.npz")
-        # ---- フレームバッファ ----
+        # --- フレームバッファ ---
         self._queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=100)
         self._running: bool = False
         # ====
 
-    # ==== CameraStream から受信する slot ====
+    # ===== CameraStream から受信する slot =====
     def enqueue_frame(self, frame: np.ndarray) -> None:
-        """
-        外部からフレームを受信しキューに格納する。
-        """
+        """外部からフレームを受信しキューに格納する。"""
         if not self._running:
             return
         try:
@@ -59,11 +55,9 @@ class FrameCalibrator(QThread):
             self._queue.put_nowait(frame)
     # ====
 
-    # ==== スレッド本体 ====
+    # ===== スレッド本体 =====
     def run(self) -> None:  # noqa: D401
-        """
-        フレームを解析して規定枚数そろったら calibrateCamera を実行。
-        """
+        """フレームを解析して規定枚数そろったら calibrateCamera を実行。"""
         self._running = True
 
         objp = self._create_object_points()
@@ -86,7 +80,7 @@ class FrameCalibrator(QThread):
             if found:
                 cv2.drawChessboardCorners(disp, self._pattern_size, corners, found)
             if found:
-                # ---- サブピクセル精緻化 ----
+                # --- サブピクセル精緻化 ---
                 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
                 sub = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
 
@@ -123,7 +117,7 @@ class FrameCalibrator(QThread):
             self.failed.emit("キャリブレーションに失敗しました。")
             return
 
-        # ---- キャリブレーション完了時の保存 ----
+        # --- キャリブレーション完了時の保存 ---
         np.savez(self._save_path, camera_matrix=mtx, dist_coeffs=dist, rvecs=rvecs, tvecs=tvecs, reprojection_error=ret)
 
         self.finished.emit({
@@ -134,21 +128,17 @@ class FrameCalibrator(QThread):
         })
     # ====
 
-    # ==== 停止要求 ====
+    # ===== 停止要求 =====
     def stop(self) -> None:
-        """
-        ワーカを停止する。
-        """
+        """ワーカを停止する。"""
         self._running = False
         self.requestInterruption()
         self.wait()
     # ====
 
-    # ==== 内部ヘルパ ====
+    # ===== 内部ヘルパ =====
     def _create_object_points(self) -> np.ndarray:
-        """
-        チェスボード上の 3D 座標 (Z=0) を生成。
-        """
+        """チェスボード上の 3D 座標 (Z=0) を生成。"""
         objp = np.zeros((self._pattern_size[0] * self._pattern_size[1], 3), np.float32)
         objp[:, :2] = np.mgrid[0:self._pattern_size[0], 0:self._pattern_size[1]].T.reshape(-1, 2)
         objp *= self._square_size

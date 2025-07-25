@@ -1,9 +1,9 @@
-# ==== 標準ライブラリのインポート ====
+# ===== 標準ライブラリのインポート =====
 from typing import Tuple, List, Callable, Any
 from pathlib import Path
 # ====
 
-# ==== PySide6 ウィジェット関連のインポート ====
+# ===== PySide6 ウィジェット関連のインポート =====
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
     QHBoxLayout, QGroupBox, QComboBox, QScrollArea,
@@ -11,12 +11,12 @@ from PySide6.QtWidgets import (
 )
 # ====
 
-# ==== PySide6 コア／GUI モジュールのインポート ====
+# ===== PySide6 コア／GUI モジュールのインポート =====
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QImage, QCloseEvent
 # ====
 
-# ==== 自作モジュールのインポート（相対パス） ====
+# ===== 自作モジュールのインポート（相対パス） =====
 from .style_constants import (
     BACKGROUND_COLOR,
     TEXT_COLOR,
@@ -38,11 +38,9 @@ def safe_disconnect(signal: object, slot: Callable[..., Any]) -> None:
 
 
 class MainWindow(QMainWindow):
-    """
-    アプリケーションのメインウィンドウ。
-    """
+    """アプリケーションのメインウィンドウ。"""
 
-    # ==== コンストラクタ ====
+    # ===== コンストラクタ =====
     def __init__(self) -> None:
         """UI を構築し、カメラマネージャを初期化する。"""
         super().__init__()
@@ -50,7 +48,7 @@ class MainWindow(QMainWindow):
         # ウィンドウタイトル
         self.setWindowTitle("ESTiVision")
 
-        # ---- カメラ別ウィジェット／スレッド管理辞書 ----
+        # --- カメラ別ウィジェット／スレッド管理辞書 ---
         #     {cam_id: {...}}
         self.camera_widgets: dict[int, dict[str, object]] = {}
         self.streams: dict[int, CameraStream | None] = {1: None, 2: None}
@@ -68,11 +66,9 @@ class MainWindow(QMainWindow):
         self.adjustSize()
         self.setFixedWidth(self.width())
 
-    # ==== UI 構築 ====
+    # ===== UI 構築 =====
     def _setup_ui(self) -> None:
-        """
-        スクロール対応コンテンツを中央に配置。
-        """
+        """スクロール対応コンテンツを中央に配置。"""
         content_widget = QWidget()
         content_layout = QVBoxLayout(content_widget)
         content_layout.setAlignment(Qt.AlignTop)
@@ -92,11 +88,9 @@ class MainWindow(QMainWindow):
             + scroll_area.verticalScrollBar().sizeHint().width() + 24
         self.setFixedWidth(total_w)
 
-    # ==== セクション生成 ====
+    # ===== セクション生成 =====
     def _create_cameras_section(self) -> QGroupBox:
-        """
-        カメラ 1・2 のプレビューグループを並べる。
-        """
+        """カメラ 1・2 のプレビューグループを並べる。"""
         layout = QHBoxLayout()
         for cam_id in (1, 2):
             grp, combo, label, calib_btn, status_lbl, progress = (
@@ -124,9 +118,7 @@ class MainWindow(QMainWindow):
         self,
         cam_id: int
     ) -> Tuple[QGroupBox, QComboBox, QLabel, QPushButton, QLabel, QProgressBar]:
-        """
-        cam_id 用の UI グループ生成。
-        """
+        """cam_id 用の UI グループ生成。"""
         combo = SafeComboBox()
         combo.addItem("未選択")
         combo.setFixedWidth(320)
@@ -175,6 +167,7 @@ class MainWindow(QMainWindow):
     def _make_qimage_updater(self, label: QLabel) -> Callable[[QImage], None]:
         """QImage をラベルへ描画するコールバックを生成。"""
         def _update(qimg: QImage) -> None:
+            """受信した QImage を QLabel に描画する。"""
             label.setPixmap(
                 QPixmap.fromImage(qimg).scaled(
                     320,
@@ -185,11 +178,9 @@ class MainWindow(QMainWindow):
             )
         return _update
 
-    # ==== カメラリスト更新 ====
+    # ===== カメラリスト更新 =====
     def _on_cameras_changed(self, names: List[str]) -> None:
-        """
-        デバイス接続変化時にコンボを更新。
-        """
+        """デバイス接続変化時にコンボを更新。"""
         for cam_id in (1, 2):
             combo: QComboBox = self.camera_widgets[cam_id]["combo"]  # type: ignore[index]
             combo.blockSignals(True)
@@ -200,11 +191,9 @@ class MainWindow(QMainWindow):
             combo.blockSignals(False)
         self._update_combo_enabled_states()
 
-    # ==== コンボ選択 ====
+    # ===== コンボ選択 =====
     def _on_camera_selected(self, cam_id: int, index: int) -> None:
-        """
-        カメラ選択／解除時の処理。
-        """
+        """カメラ選択／解除時の処理。"""
         widgets = self.camera_widgets[cam_id]
         combo: QComboBox = widgets["combo"]  # type: ignore[index]
         label: QLabel = widgets["label"]  # type: ignore[index]
@@ -216,13 +205,13 @@ class MainWindow(QMainWindow):
         stream: CameraStream | None = self.streams[cam_id]
         worker: FrameCalibrator | None = self.calib_workers[cam_id]
 
-        # ---- 既存ストリーム停止 ----
+        # --- 既存ストリーム停止 ---
         if stream:
             safe_disconnect(stream.image_ready, update_slot)
             stream.stop()
             self.streams[cam_id] = None
 
-        # ---- キャリブレーションワーカ停止 ----
+        # --- キャリブレーションワーカ停止 ---
         if worker:
             if stream:
                 safe_disconnect(stream.frame_ready, worker.enqueue_frame)
@@ -234,19 +223,19 @@ class MainWindow(QMainWindow):
         progress.setVisible(False)
         progress.setValue(0)
 
-        # ---- ボタン／ステータス初期化 ----
+        # --- ボタン／ステータス初期化 ---
         calib_btn.setEnabled(False)
         status_lbl.setText("未キャリブレーション")
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
         status_lbl.setVisible(True)
 
-        # ---- 未選択 ----
+        # --- 未選択 ---
         if index == 0:
             self._update_combo_enabled_states()
             return
 
         device_id = index - 1
-        # ---- キャリブレーション済みかチェック ----
+        # --- キャリブレーション済みかチェック ---
         npz_path = Path(f"data/calib_cam{device_id}.npz")
         if npz_path.exists():
             try:
@@ -261,7 +250,7 @@ class MainWindow(QMainWindow):
             status_lbl.setTextFormat(Qt.PlainText)
             status_lbl.setText("未キャリブレーション")
 
-        # ---- 重複選択チェック ----
+        # --- 重複選択チェック ---
         if other_combo.currentIndex() == index:
             QMessageBox.warning(
                 self, "カメラ重複",
@@ -273,24 +262,22 @@ class MainWindow(QMainWindow):
             self._update_combo_enabled_states()
             return
 
-        # ---- 新ストリーム開始 ----
+        # --- 新ストリーム開始 ---
         stream = CameraStream(device_id)
         stream.image_ready.connect(update_slot)
         stream.error.connect(lambda msg, cid=cam_id: self._on_stream_error(cid, msg))
         stream.start()
         self.streams[cam_id] = stream
 
-        # ---- ボタン有効化 ----
+        # --- ボタン有効化 ---
         calib_btn.setEnabled(True)
 
         self._update_combo_enabled_states()
         self._refresh_calib_ui(cam_id)
 
-    # ==== キャリブレーション開始 ====
+    # ===== キャリブレーション開始 =====
     def _on_calibration_start(self, cam_id: int) -> None:
-        """
-        キャリブレーションボタン押下時。
-        """
+        """キャリブレーションボタン押下時。"""
         widgets = self.camera_widgets[cam_id]
         combo: QComboBox = widgets["combo"]  # type: ignore[index]
         calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
@@ -386,11 +373,9 @@ class MainWindow(QMainWindow):
         combo.blockSignals(False)
         self._on_camera_selected(cam_id, 0)
 
-    # ==== UI ヘルパ ====
+    # ===== UI ヘルパ =====
     def _update_combo_enabled_states(self) -> None:
-        """
-        同じカメラの重複選択を防ぐため item の Enabled を切り替える。
-        """
+        """同じカメラの重複選択を防ぐため item の Enabled を切り替える。"""
         combo1: QComboBox = self.camera_widgets[1]["combo"]  # type: ignore[index]
         combo2: QComboBox = self.camera_widgets[2]["combo"]  # type: ignore[index]
         sel1 = combo1.currentIndex()
@@ -403,9 +388,7 @@ class MainWindow(QMainWindow):
             itm2.setEnabled(idx == 0 or idx != sel1)
 
     def _refresh_calib_ui(self, cam_id: int) -> None:
-        """
-        combo とワーカ状態からキャリブレーションボタンの Enabled を更新。
-        """
+        """combo とワーカ状態からキャリブレーションボタンの Enabled を更新。"""
         widgets = self.camera_widgets[cam_id]
         combo: QComboBox = widgets["combo"]  # type: ignore[index]
         calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
@@ -414,9 +397,7 @@ class MainWindow(QMainWindow):
         calib_btn.setEnabled(combo.currentIndex() != 0 and worker is None)
     
     def _set_calib_status_label(self, status_lbl: QLabel, error: float | None, threshold: float = 1.0) -> None:
-        """
-        キャリブレーション完了時または再選択時のステータスラベル表示を共通化する。
-        """
+        """キャリブレーション完了時または再選択時のステータスラベル表示を共通化する。"""
         status_lbl.setStyleSheet("")  # 色指定リセット（qdarkstyleデフォルトに）
         from .style_constants import SUCCESS_COLOR, WARNING_COLOR
         if error is not None and not (isinstance(error, float) and (error != error)):  # NaN防止
@@ -435,11 +416,9 @@ class MainWindow(QMainWindow):
             status_lbl.setTextFormat(Qt.PlainText)
             status_lbl.setText("キャリブレーション完了")
 
-    # ==== ウィンドウクローズ ====
+    # ===== ウィンドウクローズ =====
     def closeEvent(self, event: QCloseEvent) -> None:
-        """
-        すべてのスレッドを安全に停止。
-        """
+        """すべてのスレッドを安全に停止。"""
         for stream in self.streams.values():
             if stream:
                 stream.stop()
