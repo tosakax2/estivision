@@ -29,8 +29,7 @@ class PoseEstimator:
         self._model_path: Path = Path(model_path)
         if not self._model_path.exists():
             raise FileNotFoundError(
-                f"モデルが見つかりません：{self._model_path}\n"
-                "tools/download_movenet_onnx.py を先に実行してください。"
+                f"モデルが見つかりません：{self._model_path}"
             )
 
         # --- ONNX Runtime セッション生成 (CPU) ---
