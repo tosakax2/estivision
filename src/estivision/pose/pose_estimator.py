@@ -30,7 +30,6 @@ class PoseEstimator:
     # --- サポートされるモデルタイプ ---
     SUPPORTED_MODELS: Tuple[str, ...] = tuple(_MODEL_INFO.keys())
 
-    # --------------------------------------------------------------------- #
     def __init__(
         self,
         model_type: str = "lightning",
@@ -65,7 +64,6 @@ class PoseEstimator:
         self._input_name: str = self._session.get_inputs()[0].name
         self._output_name: str = self._session.get_outputs()[0].name
 
-    # --------------------------------------------------------------------- #
     def estimate(self, image_bgr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """1 枚の BGR 画像から 17 点の (x, y) と score を返す。"""
         orig_h, orig_w = image_bgr.shape[:2]
@@ -95,7 +93,6 @@ class PoseEstimator:
 
         return keypoints_px, scores
 
-    # --------------------------------------------------------------------- #
     @property
     def keypoint_names(self) -> Tuple[str, ...]:
         """キーポイント名のタプルを返す。"""
