@@ -1,5 +1,8 @@
-# ===== 標準ライブラリ・外部ライブラリのインポート =====
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from __future__ import annotations
+
+# --- 外部ライブラリ ---
 import cv2
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
@@ -9,19 +12,20 @@ from PySide6.QtGui import QImage
 class CameraStream(QThread):
     """単一 VideoCapture から読み込んだフレームを複数処理系へ配信するハブスレッド。"""
 
-    # --- GUI プレビュー／処理用シグナル ---
+    # ===== GUI プレビュー／処理用シグナル =====
     image_ready: Signal = Signal(QImage)
     frame_ready: Signal = Signal(object)  # ndarray (BGR)
     error: Signal = Signal(str)
+    # ====
 
     def __init__(self, device_id: int, fps: int = 30) -> None:
         """device_id で指定されたカメラを fps でストリーミングする。"""
         super().__init__()
-        # ===== 引数保持 =====
+
+        # --- 引数保持 ---
         self._device_id: int = device_id
         self._fps: int = fps
         self._running: bool = False
-        # ====
 
     # ===== スレッド本体 =====
     def run(self) -> None:  # noqa: D401
@@ -69,11 +73,9 @@ class CameraStream(QThread):
             self.msleep(int(1000 / self._fps))
 
         cap.release()
-    # ====
 
     # ===== 停止要求 =====
     def stop(self) -> None:
         """取得ループを終了させる。"""
         self._running = False
         self.wait()
-    # ====

@@ -1,22 +1,18 @@
-# ===== 標準ライブラリのインポート =====
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from typing import Tuple, List, Callable, Any
 from pathlib import Path
-# ====
 
-# ===== PySide6 ウィジェット関連のインポート =====
+# --- 外部ライブラリ ---
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QLabel, QLayout, QVBoxLayout,
     QHBoxLayout, QGroupBox, QComboBox, QScrollArea,
     QMessageBox, QPushButton, QProgressBar
 )
-# ====
-
-# ===== PySide6 コア／GUI モジュールのインポート =====
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QImage, QCloseEvent
-# ====
 
-# ===== 自作モジュールのインポート（相対パス） =====
+# --- 自作モジュール ---
 from .style_constants import (
     BACKGROUND_COLOR,
     TEXT_COLOR,
@@ -30,12 +26,11 @@ from .safe_widgets import SafeComboBox
 
 
 def safe_disconnect(signal: object, slot: Callable[..., Any]) -> None:
-    """Disconnect ``slot`` from ``signal`` ignoring any errors."""
+    """エラーを無視して `signal` から `slot` を切断する。"""
     try:
         signal.disconnect(slot)
     except Exception:
         pass
-
 
 class MainWindow(QMainWindow):
     """アプリケーションのメインウィンドウ。"""

@@ -1,4 +1,5 @@
-# ===== PySide6 インポート =====
+# ===== インポート =====
+# --- 外部ライブラリ ---
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtGui import QWheelEvent
 # ====

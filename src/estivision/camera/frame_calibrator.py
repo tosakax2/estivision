@@ -1,7 +1,10 @@
-# ===== 標準ライブラリ / 外部ライブラリのインポート =====
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from __future__ import annotations
 import queue
 from pathlib import Path
+
+# --- 外部ライブラリ ---
 from typing import List, Tuple
 import cv2
 import numpy as np
@@ -13,12 +16,13 @@ from PySide6.QtGui import QImage
 class FrameCalibrator(QThread):
     """CameraStream から供給されるフレームを用いてキャリブレーションを実行するワーカ。"""
 
-    # --- 進捗／完了／失敗シグナル ---
+    # ===== 進捗／完了／失敗シグナル =====
     progress: Signal = Signal(int)       # 0–100 %
     finished: Signal = Signal(object)    # dict 結果
     failed: Signal = Signal(str)         # 失敗メッセージ
     preview: Signal = Signal(QImage)     # 処理中プレビュー
     capture_done: Signal = Signal()      # 解析用画像収集完了
+    # =====
 
     def __init__(
         self,
@@ -53,7 +57,6 @@ class FrameCalibrator(QThread):
         except queue.Full:
             self._queue.get_nowait()      # 古いフレームを破棄
             self._queue.put_nowait(frame)
-    # ====
 
     # ===== スレッド本体 =====
     def run(self) -> None:  # noqa: D401
@@ -126,7 +129,6 @@ class FrameCalibrator(QThread):
             "reprojection_error": ret,
             "file": str(self._save_path)
         })
-    # ====
 
     # ===== 停止要求 =====
     def stop(self) -> None:
@@ -134,7 +136,6 @@ class FrameCalibrator(QThread):
         self._running = False
         self.requestInterruption()
         self.wait()
-    # ====
 
     # ===== 内部ヘルパ =====
     def _create_object_points(self) -> np.ndarray:
@@ -143,4 +144,3 @@ class FrameCalibrator(QThread):
         objp[:, :2] = np.mgrid[0:self._pattern_size[0], 0:self._pattern_size[1]].T.reshape(-1, 2)
         objp *= self._square_size
         return objp
-    # ====

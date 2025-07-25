@@ -1,15 +1,16 @@
-# ===== 標準ライブラリのインポート =====
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from pathlib import Path
 from typing import Tuple
-# ====
 
-# ===== 外部ライブラリのインポート =====
+# --- 外部ライブラリ ---
 import numpy as np
 from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 # ====
+
 
 def mm_to_px(mm: float, dpi: int) -> int:
     """mm → px 変換（dpi 指定）。四捨五入で整数化。"""
@@ -96,7 +97,7 @@ def generate_chessboard_a4(
 
     return canvas_w, canvas_h
 
+
 # ===== エントリポイント =====
 if __name__ == "__main__":
     generate_chessboard_a4()
-# ====

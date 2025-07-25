@@ -1,35 +1,23 @@
-# ===== 標準ライブラリのインポート =====
-import os
-import sys
+# ===== インポート =====
+# --- 標準ライブラリ ---
 import subprocess
 import time
 import threading
-# ====
 
-# ===== モジュール検索パス設定 =====
-# --- src/estivision をパスに追加（editable installしていない場合） ---
-sys.path.insert(
-    0,
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
-)
-# ====
-
-# ===== 型ヒント用インポート =====
+# --- 外部ライブラリ ---
 from typing import List
-# ====
-
-# ===== PySide6 インポート =====
 from PySide6.QtGui import QGuiApplication
+
+# --- 自作モジュール ---
+from ..src.estivision.camera.camera_manager import QtCameraManager
 # ====
 
-# ===== 自作モジュールインポート =====
-from estivision.camera.camera_manager import QtCameraManager
-# ====
 
 # ===== 定数定義 =====
 # --- PowerShell で使用するカメラの InstanceId を設定 ---
 DEVICE_ID: str = r"USB\VID_04F2&PID_B7BA&MI_00\6&7BAC750&1&0000"
 # ====
+
 
 def toggle_device() -> None:
     """内蔵カメラを無効化＆再有効化する。"""
@@ -96,8 +84,8 @@ def main() -> None:
         print("\n=== テスト終了 ===")
     # ====
 
+
 # ===== エントリポイント =====
 if __name__ == "__main__":
     # --- スクリプトとして実行された場合に main を呼び出す ---
     main()
-# ====

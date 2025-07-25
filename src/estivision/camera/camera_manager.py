@@ -1,12 +1,9 @@
-# ===== 標準ライブラリのインポート =====
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from typing import List
-# ====
 
-# ===== PySide6 コアモジュールのインポート =====
+# --- 外部ライブラリ ---
 from PySide6.QtCore import QObject, Signal, QTimer
-# ====
-
-# ===== PySide6 マルチメディアモジュールのインポート =====
 from PySide6.QtMultimedia import QMediaDevices, QCameraDevice
 # ====
 

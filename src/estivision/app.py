@@ -1,13 +1,16 @@
-# ===== 標準ライブラリ・外部ライブラリのインポート =====
+# ===== インポート =====
+# --- 標準ライブラリ ---
 import sys
+
+# --- 外部ライブラリ ---
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QFont
 import qdarkstyle
-# ====
 
-# ===== 自作モジュールのインポート（相対パス） =====
+# --- 自作モジュール ---
 from .gui.main_window import MainWindow
 # ====
+
 
 def main() -> None:
     """アプリケーションを初期化し、メインウィンドウを起動する。"""
@@ -37,7 +40,7 @@ def main() -> None:
     sys.exit(app.exec())
     # ====
 
+
 # ===== エントリポイント =====
 if __name__ == "__main__":
     main()
-# ====
