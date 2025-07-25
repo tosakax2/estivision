@@ -52,22 +52,19 @@ class MainWindow(QMainWindow):
         # ウィンドウタイトル
         self.setWindowTitle("ESTiVision")
 
+        # --- カメラ別ウィジェット／スレッド管理辞書
+        #     {cam_id: {...}}
+        self.camera_widgets: dict[int, dict[str, object]] = {}
+        self.streams: dict[int, CameraStream | None] = {1: None, 2: None}
+        self.calib_workers: dict[int, FrameCalibrator | None] = {1: None, 2: None}
+        self.preview_slots: dict[int, object] = {}
+
         # UI 構築
         self._setup_ui()
-
-        # プレビュー更新関数
-        self._preview_slot1 = self._make_qimage_updater(self.camera1_label)
-        self._preview_slot2 = self._make_qimage_updater(self.camera2_label)
 
         # カメラ接続監視
         self.qt_cam_mgr: QtCameraManager = QtCameraManager()
         self.qt_cam_mgr.cameras_changed.connect(self._on_cameras_changed)
-
-        # ストリーム／キャリブレータ保持
-        self.cam1_stream: CameraStream | None = None
-        self.cam2_stream: CameraStream | None = None
-        self.calib1_worker: FrameCalibrator | None = None
-        self.calib2_worker: FrameCalibrator | None = None
 
         # ウィンドウ幅をフィット
         self.adjustSize()
@@ -106,15 +103,21 @@ class MainWindow(QMainWindow):
         """
         カメラ 1・2 のプレビューグループを並べる。
         """
-        (grp1, self.camera1_combo, self.camera1_label, self.calib1_btn,
-         self.calib1_status, self.calib1_progress) = self._create_camera_group(1)
-
-        (grp2, self.camera2_combo, self.camera2_label, self.calib2_btn,
-         self.calib2_status, self.calib2_progress) = self._create_camera_group(2)
-
         layout = QHBoxLayout()
-        layout.addWidget(grp1)
-        layout.addWidget(grp2)
+        for cam_id in (1, 2):
+            grp, combo, label, calib_btn, status_lbl, progress = (
+                self._create_camera_group(cam_id)
+            )
+            self.camera_widgets[cam_id] = {
+                "combo": combo,
+                "label": label,
+                "calib_btn": calib_btn,
+                "status": status_lbl,
+                "progress": progress,
+            }
+            self.preview_slots[cam_id] = self._make_qimage_updater(label)
+            layout.addWidget(grp)
+
         layout.setSizeConstraint(QLayout.SetFixedSize)
         layout.setSpacing(16)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -195,7 +198,8 @@ class MainWindow(QMainWindow):
         """
         デバイス接続変化時にコンボを更新。
         """
-        for combo in (self.camera1_combo, self.camera2_combo):
+        for cam_id in (1, 2):
+            combo: QComboBox = self.camera_widgets[cam_id]["combo"]  # type: ignore[index]
             combo.blockSignals(True)
             combo.clear()
             combo.addItem("未選択")
@@ -211,31 +215,30 @@ class MainWindow(QMainWindow):
         """
         カメラ選択／解除時の処理。
         """
-        combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
-        label = self.camera1_label if cam_id == 1 else self.camera2_label
-        calib_btn = self.calib1_btn if cam_id == 1 else self.calib2_btn
-        status_lbl = self.calib1_status if cam_id == 1 else self.calib2_status
-        progress = self.calib1_progress if cam_id == 1 else self.calib2_progress
-        attr_stream = "cam1_stream" if cam_id == 1 else "cam2_stream"
-        attr_worker = "calib1_worker" if cam_id == 1 else "calib2_worker"
-        other_combo = self.camera2_combo if cam_id == 1 else self.camera1_combo
+        widgets = self.camera_widgets[cam_id]
+        combo: QComboBox = widgets["combo"]  # type: ignore[index]
+        label: QLabel = widgets["label"]  # type: ignore[index]
+        calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
+        status_lbl: QLabel = widgets["status"]  # type: ignore[index]
+        progress: QProgressBar = widgets["progress"]  # type: ignore[index]
+        other_combo: QComboBox = self.camera_widgets[2 if cam_id == 1 else 1]["combo"]  # type: ignore[index]
+        update_slot = self.preview_slots[cam_id]
+        stream: CameraStream | None = self.streams[cam_id]
+        worker: FrameCalibrator | None = self.calib_workers[cam_id]
 
         # --- 既存ストリーム停止
-        update_slot = self._preview_slot1 if cam_id == 1 else self._preview_slot2
-        stream: CameraStream | None = getattr(self, attr_stream)
         if stream:
             safe_disconnect(stream.image_ready, update_slot)
             stream.stop()
-            setattr(self, attr_stream, None)
+            self.streams[cam_id] = None
 
         # --- キャリブレーションワーカ停止
-        worker: FrameCalibrator | None = getattr(self, attr_worker)
         if worker:
             if stream:
                 safe_disconnect(stream.frame_ready, worker.enqueue_frame)
             safe_disconnect(worker.preview, update_slot)
             worker.stop()
-            setattr(self, attr_worker, None)
+            self.calib_workers[cam_id] = None
         label.clear()
         label.setText(f"Camera {cam_id} 未接続")
         progress.setVisible(False)
@@ -285,7 +288,7 @@ class MainWindow(QMainWindow):
         stream.image_ready.connect(update_slot)
         stream.error.connect(lambda msg, cid=cam_id: self._on_stream_error(cid, msg))
         stream.start()
-        setattr(self, attr_stream, stream)
+        self.streams[cam_id] = stream
 
         # --- ボタン有効化
         calib_btn.setEnabled(True)
@@ -300,80 +303,61 @@ class MainWindow(QMainWindow):
         """
         キャリブレーションボタン押下時。
         """
-        combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
-        calib_btn = self.calib1_btn if cam_id == 1 else self.calib2_btn
-        status_lbl = self.calib1_status if cam_id == 1 else self.calib2_status
-        progress = self.calib1_progress if cam_id == 1 else self.calib2_progress
-        attr_stream = "cam1_stream" if cam_id == 1 else "cam2_stream"
-        attr_worker = "calib1_worker" if cam_id == 1 else "calib2_worker"
+        widgets = self.camera_widgets[cam_id]
+        combo: QComboBox = widgets["combo"]  # type: ignore[index]
+        calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
+        status_lbl: QLabel = widgets["status"]  # type: ignore[index]
+        progress: QProgressBar = widgets["progress"]  # type: ignore[index]
 
-        # --- 未選択チェック
+        stream = self.streams[cam_id]
+        worker = self.calib_workers[cam_id]
+        update_slot = self.preview_slots[cam_id]
+
         if combo.currentIndex() == 0:
             return
 
-        # --- 既存ワーカ稼働中なら無視
-        if getattr(self, attr_worker):
+        if worker:
             return
 
-        # --- UI 更新
         calib_btn.setEnabled(False)
         status_lbl.setVisible(False)
         progress.setValue(0)
         progress.setVisible(True)
 
-        # --- ワーカ生成
         device_id = combo.currentIndex() - 1
         calib_worker = FrameCalibrator(device_id=device_id)
-        setattr(self, attr_worker, calib_worker)
+        self.calib_workers[cam_id] = calib_worker
 
-        # --- ストリームからフレームを受信
-        stream: CameraStream = getattr(self, attr_stream)
-        stream.frame_ready.connect(calib_worker.enqueue_frame)
-        update_slot = self._preview_slot1 if cam_id == 1 else self._preview_slot2
-        safe_disconnect(stream.image_ready, update_slot)
+        if stream:
+            stream.frame_ready.connect(calib_worker.enqueue_frame)
+            safe_disconnect(stream.image_ready, update_slot)
+
         calib_worker.preview.connect(update_slot)
 
-        # --- シグナル接続
         calib_worker.progress.connect(progress.setValue)
-        calib_worker.capture_done.connect(
-            lambda strm=stream, slot=update_slot, worker_attr=attr_worker:
-                self._on_capture_done(strm, slot, worker_attr)
-        )
-        calib_worker.finished.connect(
-            lambda res, lbl=status_lbl, btn=calib_btn, prog=progress,
-            worker_attr=attr_worker:
-                self._on_calibration_finished(lbl, btn, prog, worker_attr, res)
-        )
-        calib_worker.failed.connect(
-            lambda msg, lbl=status_lbl, btn=calib_btn, prog=progress,
-            worker_attr=attr_worker:
-                self._on_calibration_failed(lbl, btn, prog, worker_attr, msg)
-        )
+        calib_worker.capture_done.connect(lambda cid=cam_id: self._on_capture_done(cid))
+        calib_worker.finished.connect(lambda res, cid=cam_id: self._on_calibration_finished(cid, res))
+        calib_worker.failed.connect(lambda msg, cid=cam_id: self._on_calibration_failed(cid, msg))
 
         calib_worker.start()
 
-    def _on_capture_done(
-        self,
-        stream: CameraStream,
-        update_slot,
-        worker_attr: str,
-    ) -> None:
+    def _on_capture_done(self, cam_id: int) -> None:
         """撮影終了時にプレビュー接続を戻す。"""
-        stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
-        safe_disconnect(getattr(self, worker_attr).preview, update_slot)
-        stream.image_ready.connect(update_slot)
+        stream = self.streams[cam_id]
+        worker = self.calib_workers[cam_id]
+        update_slot = self.preview_slots[cam_id]
+        if stream and worker:
+            stream.frame_ready.disconnect(worker.enqueue_frame)
+            safe_disconnect(worker.preview, update_slot)
+            stream.image_ready.connect(update_slot)
 
-    def _on_calibration_finished(
-        self,
-        status_lbl: QLabel,
-        calib_btn: QPushButton,
-        progress: QProgressBar,
-        worker_attr: str,
-        result: object,
-    ) -> None:
-        """
-        キャリブレーション完了時。
-        """
+    def _on_calibration_finished(self, cam_id: int, result: object) -> None:
+        """キャリブレーション完了時。"""
+        widgets = self.camera_widgets[cam_id]
+        status_lbl: QLabel = widgets["status"]  # type: ignore[index]
+        calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
+        progress: QProgressBar = widgets["progress"]  # type: ignore[index]
+
         progress.setVisible(False)
         status_lbl.setVisible(True)
         error = result.get("reprojection_error", None)
@@ -381,23 +365,18 @@ class MainWindow(QMainWindow):
 
         calib_btn.setEnabled(True)
 
-        # --- ワーカ破棄
-        worker = getattr(self, worker_attr)
+        worker = self.calib_workers[cam_id]
         if worker:
             worker.wait()
-        setattr(self, worker_attr, None)
+        self.calib_workers[cam_id] = None
 
-    def _on_calibration_failed(
-        self,
-        status_lbl: QLabel,
-        calib_btn: QPushButton,
-        progress: QProgressBar,
-        worker_attr: str,
-        message: str,
-    ) -> None:
-        """
-        キャリブレーション失敗時。
-        """
+    def _on_calibration_failed(self, cam_id: int, message: str) -> None:
+        """キャリブレーション失敗時。"""
+        widgets = self.camera_widgets[cam_id]
+        status_lbl: QLabel = widgets["status"]  # type: ignore[index]
+        calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
+        progress: QProgressBar = widgets["progress"]  # type: ignore[index]
+
         QMessageBox.critical(self, "キャリブレーション失敗", message)
         progress.setVisible(False)
         status_lbl.setVisible(True)
@@ -405,16 +384,15 @@ class MainWindow(QMainWindow):
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
         calib_btn.setEnabled(True)
 
-        # --- ワーカ破棄
-        worker = getattr(self, worker_attr)
+        worker = self.calib_workers[cam_id]
         if worker:
             worker.wait()
-        setattr(self, worker_attr, None)
+        self.calib_workers[cam_id] = None
 
     def _on_stream_error(self, cam_id: int, message: str) -> None:
         """CameraStream からのエラー受信時。"""
         QMessageBox.critical(self, "カメラ接続失敗", message)
-        combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
+        combo: QComboBox = self.camera_widgets[cam_id]["combo"]  # type: ignore[index]
         combo.blockSignals(True)
         combo.setCurrentIndex(0)
         combo.blockSignals(False)
@@ -427,12 +405,14 @@ class MainWindow(QMainWindow):
         """
         同じカメラの重複選択を防ぐため item の Enabled を切り替える。
         """
-        sel1 = self.camera1_combo.currentIndex()
-        sel2 = self.camera2_combo.currentIndex()
+        combo1: QComboBox = self.camera_widgets[1]["combo"]  # type: ignore[index]
+        combo2: QComboBox = self.camera_widgets[2]["combo"]  # type: ignore[index]
+        sel1 = combo1.currentIndex()
+        sel2 = combo2.currentIndex()
 
-        for idx in range(self.camera1_combo.count()):
-            itm1 = self.camera1_combo.model().item(idx)
-            itm2 = self.camera2_combo.model().item(idx)
+        for idx in range(combo1.count()):
+            itm1 = combo1.model().item(idx)
+            itm2 = combo2.model().item(idx)
             itm1.setEnabled(idx == 0 or idx != sel2)
             itm2.setEnabled(idx == 0 or idx != sel1)
 
@@ -440,9 +420,10 @@ class MainWindow(QMainWindow):
         """
         combo とワーカ状態からキャリブレーションボタンの Enabled を更新。
         """
-        combo = self.camera1_combo if cam_id == 1 else self.camera2_combo
-        calib_btn = self.calib1_btn if cam_id == 1 else self.calib2_btn
-        worker = self.calib1_worker if cam_id == 1 else self.calib2_worker
+        widgets = self.camera_widgets[cam_id]
+        combo: QComboBox = widgets["combo"]  # type: ignore[index]
+        calib_btn: QPushButton = widgets["calib_btn"]  # type: ignore[index]
+        worker = self.calib_workers[cam_id]
 
         calib_btn.setEnabled(combo.currentIndex() != 0 and worker is None)
     
@@ -475,11 +456,11 @@ class MainWindow(QMainWindow):
         """
         すべてのスレッドを安全に停止。
         """
-        for stream in (self.cam1_stream, self.cam2_stream):
+        for stream in self.streams.values():
             if stream:
                 stream.stop()
 
-        for worker in (self.calib1_worker, self.calib2_worker):
+        for worker in self.calib_workers.values():
             if worker:
                 worker.requestInterruption()
                 worker.stop()
