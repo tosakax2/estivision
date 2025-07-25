@@ -1,5 +1,6 @@
 # ===== PySide6 インポート =====
 from PySide6.QtWidgets import QComboBox
+from PySide6.QtGui import QWheelEvent
 # =====
 
 
@@ -7,7 +8,7 @@ class SafeComboBox(QComboBox):
     """
     ドロップダウンが開いていないときはホイールイベントを無視する ComboBox。
     """
-    def wheelEvent(self, event) -> None:  # type: ignore[override]
+    def wheelEvent(self, event: QWheelEvent) -> None:
         """
         ドロップダウン表示時のみ既定動作。未表示なら無視してフリーズを防止。
         """

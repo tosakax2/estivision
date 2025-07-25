@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 # ===== PySide6 コア／GUI モジュールのインポート =====
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QCloseEvent
 # =====
 
 # ===== 自作モジュールのインポート（相対パス） =====
@@ -452,7 +452,7 @@ class MainWindow(QMainWindow):
     # --------------------------------------------------------------------- #
     # ウィンドウクローズ                                                     #
     # --------------------------------------------------------------------- #
-    def closeEvent(self, event) -> None:  # type: ignore[override]
+    def closeEvent(self, event: QCloseEvent) -> None:
         """
         すべてのスレッドを安全に停止。
         """
