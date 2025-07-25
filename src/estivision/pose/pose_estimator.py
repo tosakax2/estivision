@@ -1,13 +1,15 @@
-# === 標準ライブラリのインポート ===
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from pathlib import Path
 from typing import List, Tuple
 
-# === 外部ライブラリのインポート ===
+# --- 外部ライブラリ ---
 import cv2 as cv
 import numpy as np
 import onnxruntime as ort
+# ====
 
-# === 定数定義 ===
+# ===== 定数定義 =====
 _KEYPOINT_NAMES: Tuple[str, ...] = (
     "nose", "left_eye", "right_eye", "left_ear", "right_ear",
     "left_shoulder", "right_shoulder", "left_elbow", "right_elbow",
@@ -19,12 +21,13 @@ _MODEL_INFO = {
     "lightning": {"file": "movenet_singlepose_lightning_v4.onnx", "input_size": 192},
     "thunder":   {"file": "movenet_singlepose_thunder_v4.onnx",   "input_size": 256},
 }
+# ====
 
 
 class PoseEstimator:
     """MoveNet で単一人物姿勢推定を行うラッパークラス。"""
 
-    # - サポートされるモデルタイプ -
+    # --- サポートされるモデルタイプ ---
     SUPPORTED_MODELS: Tuple[str, ...] = tuple(_MODEL_INFO.keys())
 
     # --------------------------------------------------------------------- #
@@ -39,13 +42,13 @@ class PoseEstimator:
         if model_type not in self.SUPPORTED_MODELS:
             raise ValueError(f"model_type must be one of {self.SUPPORTED_MODELS}")
 
-        # - モデルパス決定 -
+        # --- モデルパス決定 ---
         model_dir = model_dir or (Path(__file__).resolve().parents[2] / "data" / "models")
         model_path: Path = model_dir / _MODEL_INFO[model_type]["file"]
         if not model_path.is_file():
             raise FileNotFoundError(f"モデルファイルが見つかりません: {model_path}")
 
-        # - ONNX Runtime プロバイダ設定 -
+        # --- ONNX Runtime プロバイダ設定 ---
         if providers is None:
             # Radeon 環境など GPU が使えない場合を考慮し CPU を最後にフォールバック
             providers = [
@@ -67,19 +70,19 @@ class PoseEstimator:
         """1 枚の BGR 画像から 17 点の (x, y) と score を返す。"""
         orig_h, orig_w = image_bgr.shape[:2]
 
-        # - 前処理 -
+        # --- 前処理 ---
         input_tensor = cv.resize(image_bgr, (self._input_size, self._input_size))
         input_tensor = cv.cvtColor(input_tensor, cv.COLOR_BGR2RGB)
         input_tensor = input_tensor.astype(np.int32)[None, ...]  # shape: (1,H,W,3)
 
-        # - 推論 -
+        # --- 推論 ---
         outputs = self._session.run(
             [self._output_name],
             {self._input_name: input_tensor},
         )[0]  # shape: (1,1,17,3)
         kps_scores = np.squeeze(outputs)  # shape: (17,3)
 
-        # - 後処理：元解像度へ座標スケールバック -
+        # --- 後処理：元解像度へ座標スケールバック ---
         keypoints_px = np.stack(
             [
                 (kps_scores[:, 1] * orig_w).astype(np.int32),

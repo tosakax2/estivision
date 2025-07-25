@@ -1,16 +1,18 @@
-# === 標準ライブラリのインポート ===
+# ===== インポート =====
+# --- 標準ライブラリ ---
 from pathlib import Path
 
-# === 外部ライブラリのインポート ===
+# --- 外部ライブラリ ---
 import cv2 as cv
 import numpy as np
 import pytest
 
-# === 自作モジュールのインポート ===
+# --- 自作モジュール ---
 from estivision.pose.pose_estimator import PoseEstimator
+# ====
 
 
-# - テスト用フィクスチャ -
+# --- テスト用フィクスチャ ---
 @pytest.fixture(scope="module")
 def estimator() -> PoseEstimator:
     """PoseEstimator インスタンスを返す。"""
@@ -25,7 +27,7 @@ def estimator() -> PoseEstimator:
     return PoseEstimator(model_type="lightning", model_dir=model_path.parent, providers=["CPUExecutionProvider"])
 
 
-# - 推論がエラーにならず形状が正しいか確認 -
+# --- 推論がエラーにならず形状が正しいか確認 ---
 def test_estimate_output_shape(estimator: PoseEstimator) -> None:
     """出力形状 (17,2) / (17,) であることを確認。"""
     dummy_img = np.zeros((480, 640, 3), dtype=np.uint8)
@@ -36,7 +38,7 @@ def test_estimate_output_shape(estimator: PoseEstimator) -> None:
     assert np.all((0 <= scores) & (scores <= 1)), "スコアは 0.0～1.0 の範囲"
 
 
-# - 既知画像で推論し、スコアが全て 0 ではないことを確認（疎なテスト） -
+# --- 既知画像で推論し、スコアが全て 0 ではないことを確認（疎なテスト） ---
 def test_estimate_non_zero(estimator: PoseEstimator, tmp_path) -> None:
     """推論結果が全ゼロではないことを簡易確認。"""
     # tests/assets/example.jpg があれば読み込む。無ければ黒画像でテスト。
