@@ -1,7 +1,7 @@
-# ===== PySide6 インポート =====
+# ==== PySide6 インポート ====
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtGui import QWheelEvent
-# =====
+# ====
 
 
 class SafeComboBox(QComboBox):
