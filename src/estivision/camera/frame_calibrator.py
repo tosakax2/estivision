@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Tuple
 import cv2
 import numpy as np
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtGui import QImage
 # =====
 
@@ -30,7 +30,7 @@ class FrameCalibrator(QThread):
         samples: int = 20,
         device_id: int = 0,
         save_path: Path | None = None,
-        parent=None
+        parent: QObject | None = None
     ) -> None:
         """コンストラクタ。"""
         super().__init__(parent)
@@ -46,7 +46,7 @@ class FrameCalibrator(QThread):
         # =====
 
     # ===== CameraStream から受信する slot =====
-    def enqueue_frame(self, frame) -> None:
+    def enqueue_frame(self, frame: np.ndarray) -> None:
         """
         外部からフレームを受信しキューに格納する。
         """
