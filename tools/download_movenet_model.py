@@ -12,7 +12,7 @@ SAVE_PATH: str = "data/models/movenet_singlepose_lightning_v4.onnx"
 
 
 def download_movenet_model() -> None:
-    """MoveNet LightningのONNXモデルをダウンロードする。"""
+    """MoveNetのONNXモデルをダウンロードする。"""
     url = DOWNLOAD_URL
     out_path = Path(SAVE_PATH)
 

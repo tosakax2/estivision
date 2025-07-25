@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 # --- 自作モジュール ---
-from estivision.pose.pose_estimator import PoseEstimator, _KEYPOINT_NAMES
+from estivision.pose.pose_estimator import PoseEstimator
 # ====
 
 
@@ -82,7 +82,7 @@ def test_estimate_output_shape(estimator: PoseEstimator) -> None:
     assert np.all((0 <= scores) & (scores <= 1)), "スコアは 0.0～1.0 の範囲"
 
 # --- 既知画像で推論し、スコアが全て 0 ではないことを確認（疎なテスト） ---
-def test_estimate_non_zero(estimator: PoseEstimator, tmp_path) -> None:
+def test_estimate_non_zero(estimator: PoseEstimator) -> None:
     """推論結果が全ゼロではないことを簡易確認。"""
     # tests/assets/example.jpg があれば読み込む。無ければ黒画像でテスト。
     asset_jpg = Path(__file__).with_name("assets").joinpath("example.jpg")
@@ -94,7 +94,7 @@ def test_estimate_non_zero(estimator: PoseEstimator, tmp_path) -> None:
     assert np.any(scores > 0) or np.allclose(img, 0)
 
 # --- 推論結果を描画してファイル出力 ---
-def test_draw_and_save(estimator: PoseEstimator, tmp_path) -> None:
+def test_draw_and_save(estimator: PoseEstimator) -> None:
     """推論した骨格画像を tests/assets に保存。"""
     asset_dir = Path(__file__).with_name("assets")
     asset_jpg = asset_dir.joinpath("example.jpg")
