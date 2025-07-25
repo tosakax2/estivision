@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
             safe_disconnect(worker.preview, update_slot)
             stream.image_ready.connect(update_slot)
 
-    def _on_calibration_finished(self, cam_id: int, result: object) -> None:
+    def _on_calibration_finished(self, cam_id: int, result: dict[str, object]) -> None:
         """キャリブレーション完了時。"""
         widgets = self.camera_widgets[cam_id]
         status_lbl: QLabel = widgets["status"]  # type: ignore[index]
