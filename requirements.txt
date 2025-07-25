@@ -5,6 +5,7 @@ onnxruntime
 opencv-python
 Pillow
 pykalman
+pytest
 python-osc
 PySide6
 qdarkstyle
