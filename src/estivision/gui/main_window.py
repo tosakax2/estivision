@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
         """UI を構築し、カメラマネージャを初期化する。"""
         super().__init__()
 
-        # ウィンドウタイトル
+        # --- ウィンドウタイトル ---
         self.setWindowTitle("ESTiVision")
 
         # --- カメラ別ウィジェット／スレッド管理辞書 ---
@@ -55,14 +55,14 @@ class MainWindow(QMainWindow):
         self.calib_workers: dict[int, FrameCalibrator | None] = {1: None, 2: None}
         self.preview_slots: dict[int, Callable[[QImage], None]] = {}
 
-        # UI 構築
+        # --- UI 構築 ---
         self._setup_ui()
 
-        # カメラ接続監視
+        # --- カメラ接続監視 ---
         self.qt_cam_mgr: QtCameraManager = QtCameraManager()
         self.qt_cam_mgr.cameras_changed.connect(self._on_cameras_changed)
 
-        # ウィンドウ幅をフィット
+        # --- ウィンドウ幅をフィット ---
         self.adjustSize()
         self.setFixedWidth(self.width())
 
@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setCentralWidget(scroll_area)
 
-        # スクロールバー幅込みで最終幅を確定
+        # --- スクロールバー幅込みで最終幅を確定 ---
         total_w = cameras_section.sizeHint().width() \
             + scroll_area.verticalScrollBar().sizeHint().width() + 24
         self.setFixedWidth(total_w)
