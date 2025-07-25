@@ -5,7 +5,7 @@ import onnxruntime as ort
 
 
 # ===== 定数定義 =====
-MODEL_PATH: str = "models/movenet_singlepose_lightning_v4.onnx"
+MODEL_PATH: str = "data/models/movenet_singlepose_lightning_v4.onnx"
 # ====
 
 

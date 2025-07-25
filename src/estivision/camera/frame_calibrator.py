@@ -40,8 +40,8 @@ class FrameCalibrator(QThread):
         self._pattern_size = pattern_size
         self._square_size = square_size
         self._samples = samples
-        Path("data").mkdir(exist_ok=True)
-        self._save_path = save_path or Path(f"data/calib_cam{device_id}.npz")
+        Path("data/parameters").mkdir(exist_ok=True)
+        self._save_path = save_path or Path(f"data/parameters/calib_cam{device_id}.npz")
         # --- フレームバッファ ---
         self._queue: "queue.Queue[np.ndarray]" = queue.Queue(maxsize=100)
         self._running: bool = False

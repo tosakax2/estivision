@@ -7,7 +7,7 @@ from pathlib import Path
 
 # ===== 定数定義 =====
 DOWNLOAD_URL: str = "https://huggingface.co/Xenova/movenet-singlepose-lightning/resolve/main/onnx/model.onnx"
-SAVE_PATH: str = "models/movenet_singlepose_lightning_v4.onnx"
+SAVE_PATH: str = "data/models/movenet_singlepose_lightning_v4.onnx"
 # ====
 
 

@@ -231,7 +231,7 @@ class MainWindow(QMainWindow):
 
         device_id = index - 1
         # --- キャリブレーション済みかチェック ---
-        npz_path = Path(f"data/calib_cam{device_id}.npz")
+        npz_path = Path(f"data/parameters/calib_cam{device_id}.npz")
         if npz_path.exists():
             try:
                 import numpy as np
