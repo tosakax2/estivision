@@ -1,5 +1,5 @@
 # ===== 標準ライブラリのインポート =====
-from typing import Tuple, List, Callable
+from typing import Tuple, List, Callable, Any
 from pathlib import Path
 # =====
 
@@ -29,7 +29,7 @@ from .safe_widgets import SafeComboBox
 # =====
 
 
-def safe_disconnect(signal, slot) -> None:
+def safe_disconnect(signal: object, slot: Callable[..., Any]) -> None:
     """Disconnect ``slot`` from ``signal`` ignoring any errors."""
     try:
         signal.disconnect(slot)
