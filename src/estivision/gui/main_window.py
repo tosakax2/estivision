@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 # ===== PySide6 コア／GUI モジュールのインポート =====
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QImage
+from PySide6.QtGui import QPixmap, QImage, QCloseEvent
 # =====
 
 # ===== 自作モジュールのインポート（相対パス） =====
@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
             safe_disconnect(worker.preview, update_slot)
             stream.image_ready.connect(update_slot)
 
-    def _on_calibration_finished(self, cam_id: int, result: object) -> None:
+    def _on_calibration_finished(self, cam_id: int, result: dict[str, object]) -> None:
         """キャリブレーション完了時。"""
         widgets = self.camera_widgets[cam_id]
         status_lbl: QLabel = widgets["status"]  # type: ignore[index]
@@ -452,7 +452,7 @@ class MainWindow(QMainWindow):
     # --------------------------------------------------------------------- #
     # ウィンドウクローズ                                                     #
     # --------------------------------------------------------------------- #
-    def closeEvent(self, event) -> None:  # type: ignore[override]
+    def closeEvent(self, event: QCloseEvent) -> None:
         """
         すべてのスレッドを安全に停止。
         """
