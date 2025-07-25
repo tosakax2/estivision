@@ -1,9 +1,9 @@
-# ===== 標準ライブラリ・外部ライブラリのインポート =====
+# ==== 標準ライブラリ・外部ライブラリのインポート ====
 from __future__ import annotations
 import cv2
 from PySide6.QtCore import QThread, Signal
 from PySide6.QtGui import QImage
-# =====
+# ====
 
 
 class CameraStream(QThread):
@@ -11,7 +11,7 @@ class CameraStream(QThread):
     単一 VideoCapture から読み込んだフレームを複数処理系へ配信するハブスレッド。
     """
 
-    # --- GUI プレビュー／処理用シグナル
+    # ---- GUI プレビュー／処理用シグナル ----
     image_ready: Signal = Signal(QImage)
     frame_ready: Signal = Signal(object)  # ndarray (BGR)
     error: Signal = Signal(str)
@@ -21,13 +21,13 @@ class CameraStream(QThread):
         device_id で指定されたカメラを fps でストリーミングする。
         """
         super().__init__()
-        # ===== 引数保持 =====
+        # ==== 引数保持 ====
         self._device_id: int = device_id
         self._fps: int = fps
         self._running: bool = False
-        # =====
+        # ====
 
-    # ===== スレッド本体 =====
+    # ==== スレッド本体 ====
     def run(self) -> None:  # noqa: D401
         """
         VideoCapture を開き、フレーム取得ループを回す。
@@ -38,11 +38,11 @@ class CameraStream(QThread):
             self.error.emit("カメラを開けませんでした。")
             return
 
-        # --- カメラのデフォルト解像度
+        # ---- カメラのデフォルト解像度 ----
         default_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         default_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # --- 長辺 320px に縮小
+        # ---- 長辺 320px に縮小 ----
         if default_w >= default_h:
             scale = 320 / default_w if default_w else 1
             target_w, target_h = 320, int(default_h * scale)
@@ -56,32 +56,32 @@ class CameraStream(QThread):
 
         self._running = True
 
-        # --- 取得ループ
+        # ---- 取得ループ ----
         while self._running:
             ret, frame = cap.read()
             if not ret:
                 break
 
-            # --- GUI 用 QImage 生成
+            # ---- GUI 用 QImage 生成 ----
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, _ = rgb.shape
             qimg = QImage(rgb.data, w, h, 3 * w, QImage.Format.Format_RGB888)
 
-            # --- シグナル配信
+            # ---- シグナル配信 ----
             self.image_ready.emit(qimg)
             self.frame_ready.emit(frame)
 
-            # --- FPS 制御
+            # ---- FPS 制御 ----
             self.msleep(int(1000 / self._fps))
 
         cap.release()
-    # =====
+    # ====
 
-    # ===== 停止要求 =====
+    # ==== 停止要求 ====
     def stop(self) -> None:
         """
         取得ループを終了させる。
         """
         self._running = False
         self.wait()
-    # =====
+    # ====
