@@ -16,11 +16,6 @@ from estivision.pose.pose_estimator import PoseEstimator
 # ====
 
 
-def main() -> None:
-    """コマンドラインから実行された場合に単体テストを走らせる。"""
-    sys.exit(pytest.main([__file__]))
-
-
 # ===== テスト =====
 def test_pose_estimation() -> None:
     """静止画像で PoseEstimator が (17,3) 配列を返すことを検証する。"""
@@ -48,4 +43,4 @@ def test_pose_estimation() -> None:
 
 # ===== エントリポイント =====
 if __name__ == "__main__":
-    main()
+    sys.exit(pytest.main([__file__]))

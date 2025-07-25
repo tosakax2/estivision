@@ -55,9 +55,9 @@ class PoseEstimator:
 
     # ===== 内部ヘルパ =====
     def _preprocess(self, bgr: np.ndarray) -> np.ndarray:
-        """BGR→RGB, リサイズ, 正規化して (1,3,192,192)float32 を返す。"""
+        """BGR→RGB, リサイズ, int32型 (1,192,192,3) に変換。"""
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         resized = cv2.resize(rgb, INPUT_SIZE, interpolation=cv2.INTER_LINEAR)
-        tensor = resized.astype(np.float32) / 255.0 # 0-1 正規化
-        tensor = tensor.transpose(2, 0, 1)[None, ...] # (1,3,H,W)
+        tensor = resized.astype(np.int32)  # int32型へ
+        tensor = tensor[None, ...]  # (1,H,W,3)
         return tensor
