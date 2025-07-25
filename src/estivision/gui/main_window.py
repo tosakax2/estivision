@@ -29,6 +29,14 @@ from .safe_widgets import SafeComboBox
 # =====
 
 
+def safe_disconnect(signal, slot) -> None:
+    """Disconnect ``slot`` from ``signal`` ignoring any errors."""
+    try:
+        signal.disconnect(slot)
+    except Exception:
+        pass
+
+
 class MainWindow(QMainWindow):
     """
     アプリケーションのメインウィンドウ。
@@ -216,10 +224,7 @@ class MainWindow(QMainWindow):
         update_slot = self._preview_slot1 if cam_id == 1 else self._preview_slot2
         stream: CameraStream | None = getattr(self, attr_stream)
         if stream:
-            try:
-                stream.image_ready.disconnect(update_slot)
-            except Exception:
-                pass
+            safe_disconnect(stream.image_ready, update_slot)
             stream.stop()
             setattr(self, attr_stream, None)
 
@@ -227,14 +232,8 @@ class MainWindow(QMainWindow):
         worker: FrameCalibrator | None = getattr(self, attr_worker)
         if worker:
             if stream:
-                try:
-                    stream.frame_ready.disconnect(worker.enqueue_frame)
-                except Exception:
-                    pass
-            try:
-                worker.preview.disconnect(update_slot)
-            except Exception:
-                pass
+                safe_disconnect(stream.frame_ready, worker.enqueue_frame)
+            safe_disconnect(worker.preview, update_slot)
             worker.stop()
             setattr(self, attr_worker, None)
         label.clear()
@@ -331,10 +330,7 @@ class MainWindow(QMainWindow):
         stream: CameraStream = getattr(self, attr_stream)
         stream.frame_ready.connect(calib_worker.enqueue_frame)
         update_slot = self._preview_slot1 if cam_id == 1 else self._preview_slot2
-        try:
-            stream.image_ready.disconnect(update_slot)
-        except Exception:
-            pass
+        safe_disconnect(stream.image_ready, update_slot)
         calib_worker.preview.connect(update_slot)
 
         # --- シグナル接続
@@ -364,10 +360,7 @@ class MainWindow(QMainWindow):
     ) -> None:
         """撮影終了時にプレビュー接続を戻す。"""
         stream.frame_ready.disconnect(getattr(self, worker_attr).enqueue_frame)  # type: ignore[arg-type]
-        try:
-            getattr(self, worker_attr).preview.disconnect(update_slot)
-        except Exception:
-            pass
+        safe_disconnect(getattr(self, worker_attr).preview, update_slot)
         stream.image_ready.connect(update_slot)
 
     def _on_calibration_finished(
