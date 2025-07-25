@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 # --- 自作モジュール ---
-from estivision.pose.pose_estimator import PoseEstimator
+from estivision.pose.pose_estimator import PoseEstimator, _KEYPOINT_NAMES
 # ====
 
 
@@ -25,14 +25,17 @@ _SKELETON: list[tuple[int, int]] = [
 
 
 def _draw_pose(img: np.ndarray, kps: np.ndarray, scores: np.ndarray, thr: float = 0.2) -> np.ndarray:
-    """キーポイントと骨格を描画した画像を返す。"""
+    """キーポイント・骨格・名称を描画した画像を返す。"""
     disp = img.copy()
     for p1, p2 in _SKELETON:
         if scores[p1] > thr and scores[p2] > thr:
             cv.line(disp, tuple(kps[p1]), tuple(kps[p2]), (0, 255, 0), 2)
-    for (x, y), s in zip(kps, scores):
+    for (x, y), s, name in zip(kps, scores, _KEYPOINT_NAMES):
         if s > thr:
             cv.circle(disp, (int(x), int(y)), 3, (0, 0, 255), -1)
+            pos = (int(x) + 4, int(y) - 4)
+            cv.putText(disp, name, pos, cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 3, cv.LINE_AA)
+            cv.putText(disp, name, pos, cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv.LINE_AA)
     return disp
 
 
