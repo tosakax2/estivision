@@ -34,6 +34,7 @@ class CameraStream(QThread):
         """
         cap = cv2.VideoCapture(self._device_id, cv2.CAP_DSHOW)
         if not cap.isOpened():
+            cap.release()
             self.error.emit("カメラを開けませんでした。")
             return
 
