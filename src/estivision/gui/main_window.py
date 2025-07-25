@@ -1,5 +1,5 @@
 # ===== 標準ライブラリのインポート =====
-from typing import Tuple, List
+from typing import Tuple, List, Callable
 from pathlib import Path
 # =====
 
@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 # ===== PySide6 コア／GUI モジュールのインポート =====
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QImage
 # =====
 
 # ===== 自作モジュールのインポート（相対パス） =====
@@ -57,7 +57,7 @@ class MainWindow(QMainWindow):
         self.camera_widgets: dict[int, dict[str, object]] = {}
         self.streams: dict[int, CameraStream | None] = {1: None, 2: None}
         self.calib_workers: dict[int, FrameCalibrator | None] = {1: None, 2: None}
-        self.preview_slots: dict[int, object] = {}
+        self.preview_slots: dict[int, Callable[[QImage], None]] = {}
 
         # UI 構築
         self._setup_ui()
@@ -178,9 +178,9 @@ class MainWindow(QMainWindow):
         group.setLayout(vbox)
         return group, combo, label, calib_btn, status_lbl, progress
 
-    def _make_qimage_updater(self, label: QLabel):
+    def _make_qimage_updater(self, label: QLabel) -> Callable[[QImage], None]:
         """QImage をラベルへ描画するコールバックを生成。"""
-        def _update(qimg):
+        def _update(qimg: QImage) -> None:
             label.setPixmap(
                 QPixmap.fromImage(qimg).scaled(
                     320,
