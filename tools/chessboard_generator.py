@@ -74,7 +74,7 @@ def generate_chessboard_a4(
 
     # ===== PNG保存 =====
     Image.fromarray(canvas_img, mode="L").save(out_path, format="PNG", compress_level=0, dpi=(dpi, dpi))
-    print(f"Saved '{out_path}' ({canvas_w}×{canvas_h}px @{dpi}dpi)")
+    print(f"保存完了：'{out_path}' ({canvas_w}×{canvas_h}px @{dpi}dpi)")
     # ====
 
     # ===== PDF保存 =====
@@ -92,7 +92,7 @@ def generate_chessboard_a4(
     )
     c.showPage()
     c.save()
-    print(f"Saved '{out_pdf}' ({a4_w_mm}mm×{a4_h_mm}mm)")
+    print(f"保存完了：'{out_pdf}' ({a4_w_mm}mm×{a4_h_mm}mm)")
     # ====
 
     return canvas_w, canvas_h
