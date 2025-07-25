@@ -11,6 +11,7 @@ import pytest
 from estivision.pose.pose_estimator import PoseEstimator
 # ====
 
+
 # ===== 定数定義 =====
 # --- 骨格接続ペア (MoveNet Keypoint Index) ---
 _SKELETON: list[tuple[int, int]] = [
@@ -88,4 +89,4 @@ def test_draw_and_save(estimator: PoseEstimator, tmp_path) -> None:
     assert out_path.is_file()
 
 if __name__ == "__main__":
-    print("✅ テストファイルが実行されました")
+    print("テストファイルが実行されました")
