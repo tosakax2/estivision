@@ -43,6 +43,9 @@ class PoseEstimator:
 
         # --- モデルパス決定 ---
         model_dir = model_dir or (Path(__file__).resolve().parents[2] / "data" / "models")
+        if model_dir is None:
+            cand_root = Path(__file__).resolve().parents[3] / "data" / "models"
+            model_dir = cand_root if cand_root.is_dir() else cand_src
         model_path: Path = model_dir / _MODEL_INFO[model_type]["file"]
         if not model_path.is_file():
             raise FileNotFoundError(f"モデルファイルが見つかりません: {model_path}")
