@@ -16,7 +16,7 @@ dependencies = [
   "matplotlib",
   "numba",
   "numpy",
-  "onnxruntime",
+  "onnxruntime-directml",
   "opencv-python",
   "Pillow",
   "pykalman",

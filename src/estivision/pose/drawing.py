@@ -1,9 +1,8 @@
 # ===== インポート =====
 from __future__ import annotations
-from typing import List, Tuple
 
-import cv2                 as cv
-import numpy               as np
+import cv2 as cv
+import numpy as np
 # ====
 
 # --- 骨格接続ペア（MoveNet 番号対応） ---
@@ -15,12 +14,26 @@ _SKELETON: list[tuple[int, int]] = [
     (13, 15), (12, 14), (14, 16),
 ]
 _SKELETON_COLORS: list[tuple[int, int, int]] = [
-    (255, 0, 85), (255, 0, 0), (255, 85, 0), (255, 170, 0),
-    (255, 255, 0), (170, 255, 0), (85, 255, 0), (0, 255, 0),
-    (0, 255, 85), (0, 255, 170), (0, 255, 255), (0, 170, 255),
-    (0, 85, 255), (0, 0, 255), (85, 0, 255),
-    (170, 0, 255), (255, 0, 255), (255, 0, 170)
+    (255, 255, 200),  # 明るい水色
+    (255, 255, 180),
+    (255, 240, 150),
+    (255, 220, 140),
+    (255, 255, 170),
+    (230, 255, 220),
+    (200, 255, 255),  # シアン
+    (170, 230, 255),
+    (140, 210, 255),
+    (120, 200, 255),
+    (80,  180, 255),  # 青寄り
+    (60,  160, 255),
+    (50,  140, 255),
+    (40,  120, 255),
+    (30,  110, 255),
+    (20,  100, 255),
+    (10,   90, 255),
+    (0,    80, 255),
 ]
+
 
 def draw_pose(
     img_bgr: np.ndarray,
@@ -33,9 +46,9 @@ def draw_pose(
     for i, (p1, p2) in enumerate(_SKELETON):
         if scores[p1] > thr and scores[p2] > thr:
             cv.line(disp, tuple(kps_px[p1]), tuple(kps_px[p2]),
-                    _SKELETON_COLORS[i % len(_SKELETON_COLORS)], 2)
+                    _SKELETON_COLORS[i % len(_SKELETON_COLORS)], 8)
     for (x, y), s in zip(kps_px, scores):
         if s > thr:
-            cv.circle(disp, (int(x), int(y)), 5, (0, 0, 0), -1)        # 黒縁
-            cv.circle(disp, (int(x), int(y)), 3, (255, 255, 255), -1)  # 白丸
+            cv.circle(disp, (int(x), int(y)), 16, (0, 0, 0), -1)        # 黒縁
+            cv.circle(disp, (int(x), int(y)), 8, (255, 255, 255), -1)  # 白丸
     return disp

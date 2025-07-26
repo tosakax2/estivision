@@ -118,14 +118,14 @@ class MainWindow(QMainWindow):
         """cam_id 用の UI グループ生成。"""
         combo = SafeComboBox()
         combo.addItem("未選択")
-        combo.setFixedWidth(320)
+        combo.setFixedWidth(480)
         combo.currentIndexChanged.connect(
             lambda idx, cid=cam_id: self._on_camera_selected(cid, idx)
         )
 
         label = QLabel(f"Camera {cam_id} 未接続")
         label.setAlignment(Qt.AlignCenter)
-        label.setFixedSize(320, 320)
+        label.setFixedSize(480, 480)
         label.setStyleSheet(f"""
             background-color: {BACKGROUND_COLOR};
             color: {TEXT_COLOR};
@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
         progress = QProgressBar()
         progress.setRange(0, 100)
         progress.setValue(0)
-        progress.setFixedWidth(320)
+        progress.setFixedWidth(480)
         progress.setVisible(False)
 
         vbox = QVBoxLayout()
@@ -167,8 +167,8 @@ class MainWindow(QMainWindow):
             """受信した QImage を QLabel に描画する。"""
             label.setPixmap(
                 QPixmap.fromImage(qimg).scaled(
-                    320,
-                    320,
+                    480,
+                    480,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -281,7 +281,7 @@ class MainWindow(QMainWindow):
         # --- PoseWorker 起動 ---
         #     キャリブレーション済みかどうかは status_lbl のテキストで判定
         if "キャリブレーション完了" in status_lbl.text():
-            pworker = PoseWorker(providers=["CPUExecutionProvider"])
+            pworker = PoseWorker()
             pworker.image_ready.connect(update_slot)
             stream.frame_ready.connect(pworker.enqueue_frame)
             pworker.start()

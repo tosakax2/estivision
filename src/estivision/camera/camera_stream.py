@@ -18,7 +18,7 @@ class CameraStream(QThread):
     error: Signal = Signal(str)
     # ====
 
-    def __init__(self, device_id: int, fps: int = 30) -> None:
+    def __init__(self, device_id: int, fps: int = 15) -> None:
         """device_id で指定されたカメラを fps でストリーミングする。"""
         super().__init__()
 
@@ -40,7 +40,7 @@ class CameraStream(QThread):
         default_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         default_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # --- 長辺 320px に縮小 ---
+        # --- 長辺 320px に固定 ---
         if default_w >= default_h:
             scale = 320 / default_w if default_w else 1
             target_w, target_h = 320, int(default_h * scale)
