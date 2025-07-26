@@ -5,4 +5,4 @@
 ## 動作環境
 
 - OS：WIndows 11
-- Python：3.11 以降
+- Python：3.11
