@@ -21,7 +21,6 @@ from .style_constants import (
 from ..camera.camera_manager import QtCameraManager
 from ..camera.camera_stream import CameraStream
 from ..camera.frame_calibrator import FrameCalibrator
-from ..pose.pose_preview_worker import PosePreviewWorker
 from .safe_widgets import SafeComboBox
 # ====
 
@@ -49,7 +48,6 @@ class MainWindow(QMainWindow):
         self.camera_widgets: dict[int, dict[str, object]] = {}
         self.streams: dict[int, CameraStream | None] = {1: None, 2: None}
         self.calib_workers: dict[int, FrameCalibrator | None] = {1: None, 2: None}
-        self.pose_workers: dict[int, PosePreviewWorker | None] = {1: None, 2: None}
         self.preview_slots: dict[int, Callable[[QImage], None]] = {}
 
         # --- UI 構築 ---
@@ -90,14 +88,13 @@ class MainWindow(QMainWindow):
         """カメラ 1・2 のプレビューグループを並べる。"""
         layout = QHBoxLayout()
         for cam_id in (1, 2):
-            grp, combo, label, calib_btn, pose_btn, status_lbl, progress = (
+            grp, combo, label, calib_btn, status_lbl, progress = (
                 self._create_camera_group(cam_id)
             )
             self.camera_widgets[cam_id] = {
                 "combo": combo,
                 "label": label,
                 "calib_btn": calib_btn,
-                "pose_btn": pose_btn,
                 "status": status_lbl,
                 "progress": progress,
             }
@@ -139,13 +136,6 @@ class MainWindow(QMainWindow):
             lambda _, cid=cam_id: self._on_calibration_start(cid)
         )
 
-        pose_btn = QPushButton("ポーズ表示")
-        pose_btn.setCheckable(True)
-        pose_btn.setEnabled(False)
-        pose_btn.toggled.connect(
-            lambda state, cid=cam_id: self._on_pose_toggled(cid, state)
-        )
-
         status_lbl = QLabel("未キャリブレーション")
         status_lbl.setAlignment(Qt.AlignCenter)
         status_lbl.setStyleSheet(f"color: {WARNING_COLOR};")
@@ -160,7 +150,6 @@ class MainWindow(QMainWindow):
         vbox.addWidget(combo)
         vbox.addWidget(label)
         vbox.addWidget(calib_btn)
-        vbox.addWidget(pose_btn)
         vbox.addWidget(status_lbl)
         vbox.addWidget(progress)
         vbox.setSizeConstraint(QLayout.SetFixedSize)
@@ -168,7 +157,7 @@ class MainWindow(QMainWindow):
 
         group = QGroupBox(f"Camera {cam_id}")
         group.setLayout(vbox)
-        return group, combo, label, calib_btn, pose_btn, status_lbl, progress
+        return group, combo, label, calib_btn, status_lbl, progress
 
     def _make_qimage_updater(self, label: QLabel) -> Callable[[QImage], None]:
         """QImage をラベルへ描画するコールバックを生成。"""
@@ -210,24 +199,12 @@ class MainWindow(QMainWindow):
         update_slot = self.preview_slots[cam_id]
         stream: CameraStream | None = self.streams[cam_id]
         worker: FrameCalibrator | None = self.calib_workers[cam_id]
-        pose_worker: PosePreviewWorker | None = self.pose_workers[cam_id]
-        pose_btn: QPushButton = widgets.get("pose_btn")  # type: ignore[index]
 
         # --- 既存ストリーム停止 ---
         if stream:
             safe_disconnect(stream.image_ready, update_slot)
             stream.stop()
             self.streams[cam_id] = None
-
-        if pose_worker:
-            if stream:
-                safe_disconnect(stream.frame_ready, pose_worker.enqueue_frame)
-            safe_disconnect(pose_worker.preview, update_slot)
-            pose_worker.stop()
-            self.pose_workers[cam_id] = None
-        if pose_btn:
-            pose_btn.setChecked(False)
-            pose_btn.setEnabled(False)
 
         # --- キャリブレーションワーカ停止 ---
         if worker:
@@ -304,7 +281,6 @@ class MainWindow(QMainWindow):
 
         stream = self.streams[cam_id]
         worker = self.calib_workers[cam_id]
-        pose_btn: QPushButton = widgets["pose_btn"]  # type: ignore[index]
         update_slot = self.preview_slots[cam_id]
 
         if combo.currentIndex() == 0:
@@ -314,8 +290,6 @@ class MainWindow(QMainWindow):
             return
 
         calib_btn.setEnabled(False)
-        if pose_btn.isChecked():
-            pose_btn.setChecked(False)
         status_lbl.setVisible(False)
         progress.setValue(0)
         progress.setVisible(True)
@@ -361,11 +335,6 @@ class MainWindow(QMainWindow):
 
         calib_btn.setEnabled(True)
 
-        pose_btn: QPushButton = widgets["pose_btn"]  # type: ignore[index]
-        if not self.pose_workers[cam_id]:
-            self.pose_workers[cam_id] = PosePreviewWorker()
-        pose_btn.setEnabled(True)
-
         worker = self.calib_workers[cam_id]
         if worker:
             worker.wait()
@@ -389,27 +358,6 @@ class MainWindow(QMainWindow):
         if worker:
             worker.wait()
         self.calib_workers[cam_id] = None
-
-    def _on_pose_toggled(self, cam_id: int, checked: bool) -> None:
-        """Pose overlay toggle handler."""
-        widgets = self.camera_widgets[cam_id]
-        pose_btn: QPushButton = widgets["pose_btn"]  # type: ignore[index]
-        stream = self.streams[cam_id]
-        worker = self.pose_workers.get(cam_id)
-        update_slot = self.preview_slots[cam_id]
-        if not worker or not stream:
-            pose_btn.setChecked(False)
-            return
-        if checked:
-            safe_disconnect(stream.image_ready, update_slot)
-            stream.frame_ready.connect(worker.enqueue_frame)
-            worker.preview.connect(update_slot)
-            if not worker.isRunning():
-                worker.start()
-        else:
-            safe_disconnect(stream.frame_ready, worker.enqueue_frame)
-            safe_disconnect(worker.preview, update_slot)
-            stream.image_ready.connect(update_slot)
 
     def _on_stream_error(self, cam_id: int, message: str) -> None:
         """CameraStream からのエラー受信時。"""
@@ -474,9 +422,5 @@ class MainWindow(QMainWindow):
             if worker:
                 worker.requestInterruption()
                 worker.stop()
-
-        for pworker in self.pose_workers.values():
-            if pworker:
-                pworker.stop()
 
         super().closeEvent(event)

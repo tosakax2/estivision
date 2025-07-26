@@ -9,8 +9,53 @@ import pytest
 
 # --- 自作モジュール ---
 from estivision.pose.pose_estimator import PoseEstimator
-from estivision.pose.drawing import draw_pose
 # ====
+
+
+# ===== 定数定義 =====
+# --- 骨格接続ペア (MoveNet Keypoint Index) ---
+_SKELETON: list[tuple[int, int]] = [
+    (0, 1), (0, 2), (1, 3), (2, 4),
+    (0, 5), (0, 6), (5, 7), (7, 9),
+    (6, 8), (8, 10), (5, 6), (5, 11),
+    (6, 12), (11, 12), (11, 13),
+    (13, 15), (12, 14), (14, 16),
+]
+# --- 骨格ごとに色を設定 ---
+_SKELETON_COLORS: list[tuple[int, int, int]] = [
+    (255, 0, 85),     # 鼻～首（ピンク系）
+    (255, 0, 0),      # 右目～鼻
+    (255, 85, 0),     # 左目～鼻
+    (255, 170, 0),    # 右耳～右目
+    (255, 255, 0),    # 左耳～左目
+    (170, 255, 0),    # 首～右肩
+    (85, 255, 0),     # 首～左肩
+    (0, 255, 0),      # 右肩～右肘
+    (0, 255, 85),     # 左肩～左肘
+    (0, 255, 170),    # 右肘～右手首
+    (0, 255, 255),    # 左肘～左手首
+    (0, 170, 255),    # 首～右腰
+    (0, 85, 255),     # 首～左腰
+    (0, 0, 255),      # 右腰～右膝
+    (85, 0, 255),     # 左腰～左膝
+    (170, 0, 255),    # 右膝～右足首
+    (255, 0, 255),    # 左膝～左足首
+]
+# ====
+
+
+def _draw_pose(img: np.ndarray, kps: np.ndarray, scores: np.ndarray, thr: float = 0.2) -> np.ndarray:
+    """骨格・キーポイントを描画。"""
+    disp = img.copy()
+    for i, (p1, p2) in enumerate(_SKELETON):
+        if scores[p1] > thr and scores[p2] > thr:
+            color = _SKELETON_COLORS[i % len(_SKELETON_COLORS)]
+            cv.line(disp, tuple(kps[p1]), tuple(kps[p2]), color, 2)
+    for (x, y), s in zip(kps, scores):
+        if s > thr:
+            cv.circle(disp, (int(x), int(y)), 5, (0, 0, 0), -1)      # 黒縁
+            cv.circle(disp, (int(x), int(y)), 3, (255, 255, 255), -1)  # 白丸
+    return disp
 
 # --- テスト用フィクスチャ ---
 @pytest.fixture(scope="module")
@@ -56,7 +101,7 @@ def test_draw_and_save(estimator: PoseEstimator) -> None:
     img = cv.imread(asset_jpg.as_posix()) if asset_jpg.is_file() else np.zeros((480, 640, 3), np.uint8)
 
     kps, scores = estimator.estimate(img)
-    drawn = draw_pose(img, kps, scores)
+    drawn = _draw_pose(img, kps, scores)
     out_path = asset_dir.joinpath("pose_result.png")
     cv.imwrite(out_path.as_posix(), drawn)
     assert out_path.is_file()

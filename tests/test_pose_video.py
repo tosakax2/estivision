@@ -7,7 +7,7 @@ import numpy as np
 
 # ===== 自作モジュールのインポート =====
 from estivision.pose.pose_estimator import PoseEstimator
-from estivision.pose.drawing import draw_pose
+from test_pose_image import _draw_pose
 
 # ===== 設定 =====
 VIDEO_PATH = "tests/assets/example.mp4"       # 入力動画ファイル
@@ -64,4 +64,4 @@ if __name__ == "__main__":
         providers=["CPUExecutionProvider"]
     )
     # 動画処理
-    process_video(VIDEO_PATH, OUT_PATH, estimator, draw_pose)
+    process_video(VIDEO_PATH, OUT_PATH, estimator, _draw_pose)
