@@ -21,6 +21,7 @@ from .style_constants import (
 from ..camera.camera_manager import QtCameraManager
 from ..camera.camera_stream import CameraStream
 from ..camera.frame_calibrator import FrameCalibrator
+from ..pose.pose_worker import PoseWorker
 from .safe_widgets import SafeComboBox
 # ====
 
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
         self.streams: dict[int, CameraStream | None] = {1: None, 2: None}
         self.calib_workers: dict[int, FrameCalibrator | None] = {1: None, 2: None}
         self.preview_slots: dict[int, Callable[[QImage], None]] = {}
+        self.pose_workers: dict[int, PoseWorker | None] = {1: None, 2: None}
 
         # --- UI 構築 ---
         self._setup_ui()
@@ -205,6 +207,15 @@ class MainWindow(QMainWindow):
             safe_disconnect(stream.image_ready, update_slot)
             stream.stop()
             self.streams[cam_id] = None
+        
+        # --- PoseWorker 停止 ---
+        pworker = self.pose_workers[cam_id]
+        if pworker:
+            safe_disconnect(pworker.image_ready, update_slot)
+            if stream:
+                safe_disconnect(stream.frame_ready, pworker.enqueue_frame)
+            pworker.stop()
+            self.pose_workers[cam_id] = None
 
         # --- キャリブレーションワーカ停止 ---
         if worker:
@@ -266,6 +277,15 @@ class MainWindow(QMainWindow):
 
         # --- ボタン有効化 ---
         calib_btn.setEnabled(True)
+
+        # --- PoseWorker 起動 ---
+        #     キャリブレーション済みかどうかは status_lbl のテキストで判定
+        if "キャリブレーション完了" in status_lbl.text():
+            pworker = PoseWorker(providers=["CPUExecutionProvider"])
+            pworker.image_ready.connect(update_slot)
+            stream.frame_ready.connect(pworker.enqueue_frame)
+            pworker.start()
+            self.pose_workers[cam_id] = pworker
 
         self._update_combo_enabled_states()
         self._refresh_calib_ui(cam_id)
@@ -339,6 +359,15 @@ class MainWindow(QMainWindow):
         if worker:
             worker.wait()
         self.calib_workers[cam_id] = None
+
+        if "キャリブレーション完了" in status_lbl.text():
+            stream = self.streams[cam_id]
+            if stream and self.pose_workers[cam_id] is None:
+                pworker = PoseWorker(providers=["CPUExecutionProvider"])
+                pworker.image_ready.connect(self.preview_slots[cam_id])
+                stream.frame_ready.connect(pworker.enqueue_frame)
+                pworker.start()
+                self.pose_workers[cam_id] = pworker
 
     def _on_calibration_failed(self, cam_id: int, message: str) -> None:
         """キャリブレーション失敗時。"""
@@ -417,6 +446,10 @@ class MainWindow(QMainWindow):
         for stream in self.streams.values():
             if stream:
                 stream.stop()
+        
+        for pworker in self.pose_workers.values():
+            if pworker:
+                pworker.stop()
 
         for worker in self.calib_workers.values():
             if worker:
