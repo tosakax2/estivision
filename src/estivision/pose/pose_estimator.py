@@ -71,6 +71,12 @@ class PoseEstimator:
         """1 枚の BGR 画像から 17 点の (x, y) と score を返す。"""
         orig_h, orig_w = image_bgr.shape[:2]
 
+        # --- 画像処理 ---
+        img = cv.GaussianBlur(image_bgr, (3, 3), 0)
+        yuv = cv.cvtColor(img, cv.COLOR_BGR2YUV)
+        yuv[:, :, 0] = cv.equalizeHist(yuv[:, :, 0])
+        img = cv.cvtColor(yuv, cv.COLOR_YUV2BGR)
+
         # --- 前処理 ---
         input_tensor = cv.resize(image_bgr, (self._input_size, self._input_size))
         input_tensor = cv.cvtColor(input_tensor, cv.COLOR_BGR2RGB)
